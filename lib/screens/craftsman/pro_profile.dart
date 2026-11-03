@@ -36,23 +36,18 @@ class _ProProfileState extends State<ProProfile> {
 
   @override
   Widget build(BuildContext context) {
-    final top = MediaQuery.paddingOf(context).top;
-    return ListView(
-      padding: EdgeInsets.fromLTRB(S.gutter, top + 14, S.gutter, S.xl),
+    return TabPage(
+      eyebrow: 'WHAT CLIENTS SEE',
+      title: 'Your',
+      accent: 'profile',
+      trailing: TagButton.light(
+        compact: true,
+        expand: false,
+        label: 'Preview',
+        icon: PhosphorIconsBold.eye,
+        onTap: () => Navigator.of(context).push(wipeRoute(CraftsmanProfileScreen(craftsman: me, readOnly: true))),
+      ),
       children: [
-        Row(
-          children: [
-            Expanded(child: Text('Profile', style: display(size: 28))),
-            TagButton.light(
-              compact: true,
-              expand: false,
-              label: 'Preview',
-              icon: PhosphorIconsBold.eye,
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CraftsmanProfileScreen(craftsman: me, readOnly: true))),
-            ),
-          ],
-        ),
-        const SizedBox(height: S.lg),
         // Verification status
         Container(
           padding: const EdgeInsets.all(S.lg),
@@ -69,11 +64,11 @@ class _ProProfileState extends State<ProProfile> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(me.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+                    Text(me.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
                     const SizedBox(height: 6),
                     const VerifiedStamp(),
                     const SizedBox(height: 6),
-                    Text('NIN checked 12 Mar 2025 · CFPA certificate', style: mono(size: 10.5, color: C.teal)),
+                    Text('NIN checked 12 Mar 2025 · CFPA certificate', style: figs(size: 10.5, color: C.teal)),
                   ],
                 ),
               ),
@@ -94,7 +89,7 @@ class _ProProfileState extends State<ProProfile> {
                   _seg('Flat', _flat, () => setState(() => _flat = true)),
                 ],
               ),
-              const Divider(height: 24, color: C.line),
+              Divider(height: 24, color: C.line),
               _stepper(_flat ? 'Flat rate per job' : 'Hourly rate', _hourly, (v) => setState(() => _hourly = v)),
               const SizedBox(height: 10),
               _stepper('Call-out fee', _callout, (v) => setState(() => _callout = v), step: 200, min: 0),
@@ -152,14 +147,14 @@ class _ProProfileState extends State<ProProfile> {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                const Icon(PhosphorIconsBold.certificate, color: C.teal),
+                Icon(PhosphorIconsBold.certificate, color: C.teal),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(c, style: const TextStyle(fontWeight: FontWeight.w700)),
                 ),
                 Text(
                   'APPROVED',
-                  style: mono(size: 10, weight: FontWeight.w700, color: C.teal),
+                  style: figs(size: 10, weight: FontWeight.w700, color: C.teal),
                 ),
               ],
             ),
@@ -167,6 +162,8 @@ class _ProProfileState extends State<ProProfile> {
         const SizedBox(height: S.xl),
         TagButton(label: 'Save changes', loading: _saving, onTap: _save),
         const SizedBox(height: 10),
+        const ThemeSwitch(),
+        const SizedBox(height: S.md),
         TagButton.light(label: 'Sign out', icon: PhosphorIconsBold.signOut, onTap: () => signOut(context)),
       ],
     );
@@ -183,10 +180,10 @@ class _ProProfileState extends State<ProProfile> {
     child: AnimatedContainer(
       duration: M.fast,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(color: sel ? C.ink : C.paper, borderRadius: BorderRadius.circular(R.pill)),
+      decoration: BoxDecoration(color: sel ? C.volt : C.bg, borderRadius: BorderRadius.circular(R.pill)),
       child: Text(
         label,
-        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: sel ? C.paper : C.ink),
+        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: sel ? C.onFill : C.ink),
       ),
     ),
   );
@@ -219,7 +216,7 @@ class _ProProfileState extends State<ProProfile> {
               child: Text(
                 value == 0 ? 'Free' : dzd(value),
                 key: ValueKey(value),
-                style: mono(size: 15, weight: FontWeight.w700),
+                style: figs(size: 15, weight: FontWeight.w700),
               ),
             ),
           ),
@@ -244,9 +241,9 @@ class _ProProfileState extends State<ProProfile> {
       curve: M.out,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: sel ? C.ink : C.card,
+        color: sel ? C.volt : C.card,
         borderRadius: BorderRadius.circular(R.pill),
-        border: Border.all(color: sel ? C.ink : C.line, width: 1.5),
+        border: Border.all(color: sel ? C.volt : C.line),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -255,15 +252,15 @@ class _ProProfileState extends State<ProProfile> {
             duration: M.fast,
             curve: M.out,
             child: sel
-                ? const Padding(
+                ? Padding(
                     padding: EdgeInsets.only(right: 5),
-                    child: Icon(PhosphorIconsBold.check, size: 13, color: C.orange),
+                    child: Icon(PhosphorIconsBold.check, size: 13, color: C.onFill),
                   )
                 : const SizedBox.shrink(),
           ),
           Text(
             label,
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: sel ? C.paper : C.ink),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: sel ? C.onFill : C.ink),
           ),
         ],
       ),

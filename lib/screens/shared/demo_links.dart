@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/kit.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/mock.dart';
@@ -27,7 +28,7 @@ bool openDeepLink(BuildContext context) {
   void root(Role role, Widget shell, [Widget? on]) {
     s.signIn(role, '0555123456');
     nav.pushAndRemoveUntil(fadeRoute(shell), (_) => false);
-    if (on != null) nav.push(MaterialPageRoute(builder: (_) => on));
+    if (on != null) nav.push(wipeRoute(on));
   }
 
   Job job(JobStatus st) => s.clientJobs.firstWhere((j) => j.status == st);

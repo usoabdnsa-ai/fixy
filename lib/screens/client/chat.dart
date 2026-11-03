@@ -61,13 +61,13 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Container(
             padding: EdgeInsets.fromLTRB(12, pad.top + 8, S.gutter, 12),
-            decoration: const BoxDecoration(
-              color: C.card,
-              border: Border(bottom: BorderSide(color: C.line, width: 1.5)),
+            decoration: BoxDecoration(
+              color: C.volt,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(R.lg)),
             ),
             child: Row(
               children: [
-                IconCircle(icon: PhosphorIconsBold.arrowLeft, label: 'Back', onTap: () => Navigator.pop(context), bg: C.paper),
+                IconCircle(icon: PhosphorIconsBold.arrowLeft, label: 'Back', onTap: () => Navigator.pop(context), bg: C.bg),
                 const SizedBox(width: 10),
                 if (!widget.asPro) Avatar(craftsman: job.craftsman!, size: 38),
                 if (!widget.asPro) const SizedBox(width: 10),
@@ -75,12 +75,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(other, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                      Text('${job.id} · ${job.status.label}', style: mono(size: 11, color: C.inkSoft)),
+                      Text(other, style: display(size: 18, color: C.onFill)),
+                      Text('${job.id} · ${job.status.label}', style: figs(size: 11.5, color: C.onFillSoft)),
                     ],
                   ),
                 ),
-                IconCircle(icon: PhosphorIconsBold.phone, label: 'Call', bg: C.paper, onTap: () => toast(context, 'Calling $other… (prototype)')),
+                IconCircle(icon: PhosphorIconsBold.phone, label: 'Call', bg: C.bg, onTap: () => toast(context, 'Calling $other… (prototype)')),
               ],
             ),
           ),
@@ -112,7 +112,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               style: const TextStyle(fontWeight: FontWeight.w700),
                             ),
                           ),
-                          if (job.price != null) ...[const SizedBox(width: 10), Text(dzd(job.price!), style: mono(size: 12, weight: FontWeight.w700))],
+                          if (job.price != null) ...[const SizedBox(width: 10), Text(dzd(job.price!), style: figs(size: 12, weight: FontWeight.w700))],
                         ],
                       ),
                     ),
@@ -124,7 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
                         'TODAY',
-                        style: mono(size: 10.5, color: C.inkSoft, weight: FontWeight.w700),
+                        style: figs(size: 10.5, color: C.inkSoft, weight: FontWeight.w700),
                       ),
                     ),
                   );
@@ -174,13 +174,13 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           Container(
             padding: EdgeInsets.fromLTRB(12, 8, 12, 8 + pad.bottom),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: C.card,
               border: Border(top: BorderSide(color: C.line, width: 1.5)),
             ),
             child: Row(
               children: [
-                IconCircle(icon: PhosphorIconsBold.camera, label: 'Send photo', bg: C.paper, onTap: () => toast(context, 'Photo picker (prototype)')),
+                IconCircle(icon: PhosphorIconsBold.camera, label: 'Send photo', bg: C.bg, onTap: () => toast(context, 'Photo picker (prototype)')),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
@@ -192,13 +192,13 @@ class _ChatScreenState extends State<ChatScreen> {
                     style: const TextStyle(fontSize: 16),
                     decoration: InputDecoration(
                       hintText: 'Message',
-                      fillColor: C.paper,
+                      fillColor: C.bg,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(R.pill), borderSide: BorderSide.none),
                       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(R.pill), borderSide: BorderSide.none),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(R.pill),
-                        borderSide: const BorderSide(color: C.ink, width: 1.5),
+                        borderSide: BorderSide(color: C.ink, width: 1.5),
                       ),
                     ),
                   ),
@@ -216,11 +216,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        color: _ctl.text.trim().isEmpty ? C.line : C.orange,
+                        color: _ctl.text.trim().isEmpty ? C.line : C.volt,
                         shape: BoxShape.circle,
-                        border: Border.all(color: C.ink, width: 1.5),
                       ),
-                      child: const Icon(PhosphorIconsFill.paperPlaneRight, size: 20, color: C.ink),
+                      child: Icon(PhosphorIconsFill.paperPlaneRight, size: 20, color: _ctl.text.trim().isEmpty ? C.inkSoft : C.onFill),
                     ),
                   ),
                 ),
@@ -246,8 +245,8 @@ class _Bubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
         decoration: BoxDecoration(
-          color: mine ? C.ink : C.card,
-          border: mine ? null : Border.all(color: C.line, width: 1.5),
+          color: mine ? C.volt : C.card,
+          border: mine ? null : Border.all(color: C.line),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -260,10 +259,10 @@ class _Bubble extends StatelessWidget {
           children: [
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(m.text, style: TextStyle(color: mine ? C.paper : C.ink, fontSize: 15, height: 1.35)),
+              child: Text(m.text, style: TextStyle(color: mine ? C.bg : C.ink, fontSize: 15, height: 1.35)),
             ),
             const SizedBox(height: 3),
-            Text(m.time, style: mono(size: 10, color: mine ? const Color(0xFFBDB3A2) : C.inkSoft)),
+            Text(m.time, style: figs(size: 10, color: mine ? C.onFillSoft : C.inkSoft)),
           ],
         ),
       ),
@@ -284,12 +283,12 @@ class _System extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(PhosphorIconsFill.sealCheck, size: 13, color: C.teal),
+            Icon(PhosphorIconsFill.sealCheck, size: 13, color: C.teal),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
                 text,
-                style: const TextStyle(color: C.teal, fontWeight: FontWeight.w600, fontSize: 12.5),
+                style: TextStyle(color: C.teal, fontWeight: FontWeight.w600, fontSize: 12.5),
               ),
             ),
           ],
@@ -321,7 +320,7 @@ class _Typing extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 width: 7,
                 height: 7,
-                decoration: const BoxDecoration(color: C.inkSoft, shape: BoxShape.circle),
+                decoration: BoxDecoration(color: C.inkSoft, shape: BoxShape.circle),
               ).animate(onPlay: (c) => c.repeat(reverse: true), delay: (i * 140).ms).moveY(begin: 0, end: -4, duration: 360.ms, curve: Curves.easeInOut),
           ],
         ),

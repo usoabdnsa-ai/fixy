@@ -69,45 +69,79 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     final pad = MediaQuery.paddingOf(context);
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: S.gutter),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  AnimatedOpacity(
-                    opacity: _step == 0 ? 0 : 1,
-                    duration: M.fast,
-                    child: IconCircle(icon: PhosphorIconsBold.arrowLeft, label: 'Back', onTap: _step == 0 ? null : () => setState(() => _step--)),
-                  ),
-                  const Spacer(),
-                  const FixyMark(size: 28),
-                ],
-              ),
-              const SizedBox(height: S.xl),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: M.base,
-                  switchInCurve: M.out,
-                  switchOutCurve: Curves.easeOut,
-                  transitionBuilder: (c, a) => FadeTransition(
-                    opacity: a,
-                    child: SlideTransition(
-                      position: Tween(begin: const Offset(.06, 0), end: Offset.zero).animate(a),
-                      child: c,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(S.gutter, pad.top + 14, S.gutter, 0),
+            child: Row(
+              children: [
+                AnimatedOpacity(
+                  opacity: _step == 0 ? 0 : 1,
+                  duration: M.fast,
+                  child: Pressable(
+                    onTap: _step == 0 ? null : () => setState(() => _step--),
+                    semanticLabel: 'Back',
+                    scale: 0.92,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(border: Border.all(color: C.lineStrong), borderRadius: BorderRadius.circular(R.sm)),
+                      child: Icon(PhosphorIconsBold.arrowLeft, size: 20, color: C.ink),
                     ),
                   ),
-                  layoutBuilder: (cur, prev) => Stack(alignment: Alignment.topLeft, children: [...prev, ?cur]),
-                  child: KeyedSubtree(key: ValueKey(_step), child: [_roleStep(), _phoneStep(), _otpStep()][_step]),
                 ),
-              ),
-              SizedBox(height: pad.bottom > 0 ? 0 : S.lg),
-            ],
+                const Spacer(),
+                const Wordmark(size: 22),
+                const Spacer(),
+                Text('${idx(_step)}/03', style: figs(size: 12, weight: FontWeight.w700, color: C.volt).copyWith(letterSpacing: 1.2)),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 14),
+          // Step progress: three volt segments across the full width.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: S.gutter),
+            child: Row(
+              children: [
+                for (var i = 0; i < 3; i++)
+                  Expanded(
+                    child: Container(
+                      margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
+                      height: 3,
+                      color: C.lineStrong,
+                      alignment: Alignment.centerLeft,
+                      child: AnimatedFractionallySizedBox(
+                        duration: M.slow,
+                        curve: M.out,
+                        widthFactor: i <= _step ? 1 : 0,
+                        child: Container(color: C.volt),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(S.gutter, S.md, S.gutter, pad.bottom > 0 ? 0 : S.lg),
+              child: AnimatedSwitcher(
+                duration: M.base,
+                switchInCurve: M.out,
+                switchOutCurve: Curves.easeOut,
+                transitionBuilder: (c, a) => FadeTransition(
+                  opacity: a,
+                  child: SlideTransition(
+                    position: Tween(begin: const Offset(.06, 0), end: Offset.zero).animate(a),
+                    child: c,
+                  ),
+                ),
+                layoutBuilder: (cur, prev) => Stack(alignment: Alignment.topLeft, children: [...prev, ?cur]),
+                child: KeyedSubtree(key: ValueKey(_step), child: [_roleStep(), _phoneStep(), _otpStep()][_step]),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -125,10 +159,10 @@ class _AuthScreenState extends State<AuthScreen> {
             curve: M.out,
             padding: const EdgeInsets.all(S.lg),
             decoration: BoxDecoration(
-              color: sel ? C.card : C.paper,
+              color: sel ? C.card : C.bg,
               borderRadius: BorderRadius.circular(R.lg),
-              border: Border.all(color: sel ? C.ink : C.line, width: 2),
-              boxShadow: sel ? tagShadow : null,
+              border: Border.all(color: sel ? C.volt : C.line, width: sel ? 1.5 : 1),
+              boxShadow: sel ? lift : null,
             ),
             child: Row(
               children: [
@@ -137,18 +171,17 @@ class _AuthScreenState extends State<AuthScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: sel ? C.orange : C.card,
+                    color: sel ? C.volt : C.voltWash,
                     borderRadius: BorderRadius.circular(R.md),
-                    border: Border.all(color: C.ink, width: 1.5),
                   ),
-                  child: Icon(icon, color: C.ink),
+                  child: Icon(icon, color: sel ? C.onFill : C.volt),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                       const SizedBox(height: 2),
                       Text(sub, style: Theme.of(context).textTheme.bodySmall),
                     ],
@@ -158,7 +191,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   scale: sel ? 1 : 0,
                   duration: M.fast,
                   curve: M.spring,
-                  child: const Icon(PhosphorIconsFill.checkCircle, color: C.teal),
+                  child: Icon(PhosphorIconsFill.checkCircle, color: C.teal),
                 ),
               ],
             ),
@@ -170,7 +203,7 @@ class _AuthScreenState extends State<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Who are you\non Fixy?', style: display(size: 32)),
+        Headline('Who are you', accent: 'on Fixy?', style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02)),
         const SizedBox(height: S.xl),
         option(Role.client, 'I need a repair', 'Home or business. Post jobs, compare quotes.', PhosphorIconsBold.house, 0),
         option(Role.craftsman, "I'm a m'lem", 'Get local jobs, set your rates in DZD.', PhosphorIconsBold.toolbox, 1),
@@ -186,7 +219,7 @@ class _AuthScreenState extends State<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Your phone\nnumber', style: display(size: 32)),
+        Headline('Your phone', accent: 'number', style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02)),
         const SizedBox(height: 8),
         Text("We text you a code. No password to remember.", style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: S.xl),
@@ -202,7 +235,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 border: Border.all(color: C.line, width: 1.5),
               ),
               alignment: Alignment.center,
-              child: Text('+213', style: mono(size: 16, weight: FontWeight.w600)),
+              child: Text('+213', style: figs(size: 16, weight: FontWeight.w600)),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -214,7 +247,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 onSubmitted: (_) => _sendCode(),
                 onChanged: (_) => setState(() => _error = null),
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
-                style: mono(size: 18, weight: FontWeight.w600),
+                style: figs(size: 18, weight: FontWeight.w600),
                 decoration: InputDecoration(hintText: '0555 12 34 56', errorText: _error, errorMaxLines: 2),
               ),
             ),
@@ -231,7 +264,7 @@ class _AuthScreenState extends State<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Enter the\n4-digit code', style: display(size: 32)),
+        Headline('Enter the', accent: '4-digit code', style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02)),
         const SizedBox(height: 8),
         Text('Sent to +213 ${_phone.text}. Any code works in this prototype.', style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: S.xl),
@@ -249,14 +282,14 @@ class _AuthScreenState extends State<AuthScreen> {
                       decoration: BoxDecoration(
                         color: C.card,
                         borderRadius: BorderRadius.circular(R.md),
-                        border: Border.all(color: i == _otp.text.length ? C.ink : C.line, width: 2),
-                        boxShadow: i < _otp.text.length ? tagShadow : null,
+                        border: Border.all(color: i == _otp.text.length ? C.volt : C.line, width: i == _otp.text.length ? 2 : 1),
+                        boxShadow: i < _otp.text.length ? lift : null,
                       ),
                       alignment: Alignment.center,
                       child: i < _otp.text.length
                           ? Text(
                               _otp.text[i],
-                              style: mono(size: 26, weight: FontWeight.w700),
+                              style: figs(size: 26, weight: FontWeight.w700),
                             ).animate().scale(begin: const Offset(.6, .6), duration: 160.ms, curve: M.spring)
                           : null,
                     ),
@@ -282,7 +315,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ],
         ),
         const SizedBox(height: S.lg),
-        Text('Resend in 0:42', style: mono(size: 12, color: C.inkSoft)),
+        Text('Resend in 0:42', style: figs(size: 12, color: C.inkSoft)),
         const Spacer(),
         TagButton(label: 'Verify', loading: _loading, onTap: _otp.text.length == 4 ? _verify : null),
         const SizedBox(height: S.lg),

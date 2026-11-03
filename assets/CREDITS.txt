@@ -6,3 +6,6 @@ thank-you to the creators. Do not surface it as visible on-site attribution.
 
 electrician-electrical-panel-1.jpg: "" by Unknown (rawpixel, cc0 1.0) — https://www.rawpixel.com/image/6064175/free-public-domain-cc0-photo
 -->
+
+Fonts (SIL Open Font License 1.1, bundled in assets/google_fonts/):
+  Barlow and Barlow Condensed by Jeremy Tribby; JetBrains Mono by JetBrains.

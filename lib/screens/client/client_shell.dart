@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/kit.dart';
 
 import '../../widgets/icons.dart';
 
@@ -29,7 +30,7 @@ class ClientShell extends StatelessWidget {
       center: (
         icon: PhosphorIconsBold.plus,
         label: 'Post a job',
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(fullscreenDialog: true, builder: (_) => const PostRequestScreen())),
+        onTap: () => Navigator.of(context).push(wipeRoute(fullscreenDialog: true, const PostRequestScreen())),
       ),
       items: [
         const NavItem('Home', PhosphorIconsBold.house, PhosphorIconsFill.house, ClientHome()),

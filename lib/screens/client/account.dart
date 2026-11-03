@@ -31,12 +31,11 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
     final saved = craftsmen.where((c) => s.favorites.contains(c.id)).toList();
-    final top = MediaQuery.paddingOf(context).top;
-    return ListView(
-      padding: EdgeInsets.fromLTRB(S.gutter, top + 14, S.gutter, S.xl),
+    return TabPage(
+      eyebrow: 'AMINA BELKACEM',
+      title: 'Your',
+      accent: 'account',
       children: [
-        Text('Account', style: display(size: 28)),
-        const SizedBox(height: S.lg),
         TagCard(
           raised: true,
           child: Row(
@@ -45,9 +44,9 @@ class _AccountScreenState extends State<AccountScreen> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: C.orangeWash,
+                  color: C.voltWash,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: C.ink, width: 1.5),
+                  border: Border.all(color: C.line),
                 ),
                 alignment: Alignment.center,
                 child: Text('AB', style: display(size: 20)),
@@ -57,9 +56,9 @@ class _AccountScreenState extends State<AccountScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(clientName, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+                    const Text(clientName, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
                     const SizedBox(height: 2),
-                    Text('+213 ${s.phone.isEmpty ? '0555 12 34 56' : s.phone}', style: mono(size: 12, color: C.inkSoft)),
+                    Text('+213 ${s.phone.isEmpty ? '0555 12 34 56' : s.phone}', style: figs(size: 12, color: C.inkSoft)),
                   ],
                 ),
               ),
@@ -113,23 +112,24 @@ class _AccountScreenState extends State<AccountScreen> {
                     duration: M.fast,
                     margin: const EdgeInsets.only(left: 6),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(color: _lang == l ? C.ink : C.paper, borderRadius: BorderRadius.circular(R.pill)),
+                    decoration: BoxDecoration(color: _lang == l ? C.volt : C.bg, borderRadius: BorderRadius.circular(R.pill)),
                     child: Text(
                       l,
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: _lang == l ? C.paper : C.ink),
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5, color: _lang == l ? C.onFill : C.ink),
                     ),
                   ),
                 ),
             ],
           ),
         ),
+        const ThemeSwitch(),
         _row(PhosphorIconsBold.shieldCheck, 'Safety & trust', 'How we verify m\'lems'),
         _row(PhosphorIconsBold.question, 'Help', 'FAQ, contact Fixy'),
         const SizedBox(height: S.lg),
         TagButton.light(label: 'Sign out', icon: PhosphorIconsBold.signOut, onTap: () => signOut(context)),
         const SizedBox(height: S.lg),
         Center(
-          child: Text('Fixy prototype · v0.1 · mock data', style: mono(size: 10.5, color: C.inkSoft)),
+          child: Text('Fixy prototype · v0.1 · mock data', style: figs(size: 10.5, color: C.inkSoft)),
         ),
       ],
     );
@@ -145,8 +145,8 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
       child: Column(
         children: [
-          Text(v, style: mono(size: 18, weight: FontWeight.w700)),
-          Text(k, style: const TextStyle(fontSize: 11.5, color: C.inkSoft)),
+          Text(v, style: figs(size: 18, weight: FontWeight.w700)),
+          Text(k, style: TextStyle(fontSize: 11.5, color: C.inkSoft)),
         ],
       ),
     ),
@@ -164,9 +164,9 @@ class _AccountScreenState extends State<AccountScreen> {
           Expanded(
             child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
           ),
-          Text(sub, style: const TextStyle(fontSize: 12.5, color: C.inkSoft)),
+          Text(sub, style: TextStyle(fontSize: 12.5, color: C.inkSoft)),
           const SizedBox(width: 6),
-          const Icon(PhosphorIconsBold.caretRight, size: 14, color: C.inkSoft),
+          Icon(PhosphorIconsBold.caretRight, size: 14, color: C.inkSoft),
         ],
       ),
     ),

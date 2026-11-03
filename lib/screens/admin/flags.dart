@@ -16,21 +16,19 @@ class FlagsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
-    final top = MediaQuery.paddingOf(context).top;
     final open = s.flags.where((f) => !f.resolved).toList();
-    return ListView(
-      padding: EdgeInsets.fromLTRB(S.gutter, top + 14, S.gutter, S.xl),
+    return TabPage(
+      eyebrow: 'MODERATION',
+      title: 'Flags &',
+      accent: 'disputes',
+      subtitle: '${open.length} open',
       children: [
-        Text('Flags & disputes', style: display(size: 28)),
-        const SizedBox(height: 4),
-        Text('${open.length} open', style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: S.lg),
         if (open.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 30),
             child: Column(
               children: [
-                const Icon(PhosphorIconsBold.flag, size: 44, color: C.inkSoft),
+                Icon(PhosphorIconsBold.flag, size: 44, color: C.inkSoft),
                 const SizedBox(height: 10),
                 Text('All clear', style: display(size: 18)),
               ],
@@ -58,7 +56,7 @@ class _FlagCard extends StatelessWidget {
     final (icon, tint, fg, label) = switch (f.kind) {
       'review' => (PhosphorIconsBold.star, C.amberWash, C.amber, 'FAKE REVIEW?'),
       'conduct' => (PhosphorIconsBold.warning, C.redWash, C.red, 'CONDUCT'),
-      _ => (PhosphorIconsBold.images, C.orangeWash, C.rust, 'LISTING'),
+      _ => (PhosphorIconsBold.images, C.voltWash, C.hotText, 'LISTING'),
     };
     final s = context.read<AppState>();
     return TagCard(
@@ -77,17 +75,17 @@ class _FlagCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       label,
-                      style: mono(size: 10.5, weight: FontWeight.w700, color: fg),
+                      style: figs(size: 10.5, weight: FontWeight.w700, color: fg),
                     ),
                   ],
                 ),
               ),
               const Spacer(),
-              Text('${f.hoursAgo} h ago', style: mono(size: 11, color: C.inkSoft)),
+              Text('${f.hoursAgo} h ago', style: figs(size: 11, color: C.inkSoft)),
             ],
           ),
           const SizedBox(height: 10),
-          Text(f.subject, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          Text(f.subject, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
           const SizedBox(height: 4),
           Text(f.reason, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: C.ink)),
           if (f.review != null) ...[
@@ -95,7 +93,7 @@ class _FlagCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: C.paper,
+                color: C.bg,
                 borderRadius: BorderRadius.circular(R.sm),
                 border: Border.all(color: C.line),
               ),
@@ -111,7 +109,7 @@ class _FlagCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 6),
-          Text('Reported by ${f.reporter}', style: mono(size: 10.5, color: C.inkSoft)),
+          Text('Reported by ${f.reporter}', style: figs(size: 10.5, color: C.inkSoft)),
           const SizedBox(height: 12),
           Row(
             children: [

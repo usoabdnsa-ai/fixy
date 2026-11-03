@@ -83,7 +83,7 @@ class _RateScreenState extends State<RateScreen> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text(k, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                          child: Text(k, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                         ),
                         _StarPicker(value: _scores[k]!, onChanged: (v) => setState(() => _scores[k] = v)),
                       ],
@@ -101,7 +101,7 @@ class _RateScreenState extends State<RateScreen> {
               const SizedBox(height: S.md),
               Row(
                 children: [
-                  const Icon(PhosphorIconsBold.shieldCheck, size: 14, color: C.inkSoft),
+                  Icon(PhosphorIconsBold.shieldCheck, size: 14, color: C.inkSoft),
                   const SizedBox(width: 6),
                   Expanded(child: Text('Only clients with a completed job can rate. One review per job.', style: Theme.of(context).textTheme.bodySmall)),
                 ],
@@ -137,11 +137,11 @@ class _RateScreenState extends State<RateScreen> {
                 children: [
                   Text(
                     avg.toStringAsFixed(1),
-                    style: mono(size: 44, weight: FontWeight.w700, color: C.teal),
+                    style: figs(size: 44, weight: FontWeight.w700, color: C.teal),
                   ),
                   Text(
                     'REVIEW FILED',
-                    style: mono(size: 13, weight: FontWeight.w700, color: C.teal),
+                    style: figs(size: 13, weight: FontWeight.w700, color: C.teal),
                   ),
                 ],
               ),
@@ -187,7 +187,7 @@ class _StarPicker extends StatelessWidget {
                   scale: i <= value ? 1.12 : 1,
                   duration: M.fast,
                   curve: M.spring,
-                  child: Icon(i <= value ? PhosphorIconsFill.star : PhosphorIconsBold.star, size: 26, color: i <= value ? C.orange : C.lineStrong),
+                  child: Icon(i <= value ? PhosphorIconsFill.star : PhosphorIconsBold.star, size: 26, color: i <= value ? C.volt : C.lineStrong),
                 ),
               ),
             ),

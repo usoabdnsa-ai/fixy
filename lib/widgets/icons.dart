@@ -45,6 +45,8 @@ abstract final class PhosphorIconsBold {
   static const pipeWrench = IconData(0xed88, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const plus = IconData(0xe3d4, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const question = IconData(0xe3e8, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const moon = IconData(0xe330, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const sun = IconData(0xe472, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const sealCheck = IconData(0xe606, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const shieldCheck = IconData(0xe40c, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const signOut = IconData(0xe42a, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);

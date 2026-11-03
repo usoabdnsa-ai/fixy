@@ -2,6 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../theme/theme.dart';
 import '../theme/tokens.dart';
 import 'kit.dart';
 
@@ -14,8 +15,8 @@ class NavItem {
   final int badge;
 }
 
-/// Bottom-tab shell shared by the three roles. Tabs fade-through (Material
-/// motion) and the ink pill slides to the active tab.
+/// Bottom-tab shell shared by the three roles: a flush black bar with a
+/// volt indicator that slides to the active tab; pages cut over quickly.
 class Shell extends StatefulWidget {
   const Shell({super.key, required this.items, this.center, this.initialIndex = 0});
   final int initialIndex;
@@ -37,8 +38,8 @@ class ShellState extends State<Shell> {
     final items = widget.items;
     return Scaffold(
       body: PageTransitionSwitcher(
-        duration: reduceMotion(context) ? Duration.zero : const Duration(milliseconds: 260),
-        transitionBuilder: (child, a, b) => FadeThroughTransition(animation: a, secondaryAnimation: b, fillColor: C.paper, child: child),
+        duration: reduceMotion(context) ? Duration.zero : const Duration(milliseconds: 220),
+        transitionBuilder: (child, a, b) => FadeThroughTransition(animation: a, secondaryAnimation: b, fillColor: C.bg, child: child),
         child: KeyedSubtree(key: ValueKey(index), child: items[index].page),
       ),
       bottomNavigationBar: _Bar(
@@ -65,22 +66,43 @@ class _Bar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final n = items.length + (center != null ? 1 : 0);
+    // Slot of the active tab, accounting for the centre action.
+    final slot = center != null && index >= items.length ~/ 2 ? index + 1 : index;
     final slots = <Widget>[];
     for (var i = 0; i < items.length; i++) {
-      if (center != null && i == items.length ~/ 2) slots.add(_CenterAction(center!));
-      slots.add(
-        Expanded(
-          child: _Tab(item: items[i], active: i == index, onTap: () => onTap(i)),
-        ),
-      );
+      if (center != null && i == items.length ~/ 2) slots.add(Expanded(child: _CenterAction(center!)));
+      slots.add(Expanded(child: _Tab(item: items[i], active: i == index, onTap: () => onTap(i))));
     }
     return Container(
-      decoration: const BoxDecoration(
-        color: C.card,
-        border: Border(top: BorderSide(color: C.line, width: 1.5)),
+      decoration: BoxDecoration(
+        color: C.bg,
+        border: Border(top: BorderSide(color: C.line)),
       ),
-      padding: EdgeInsets.fromLTRB(8, 8, 8, 8 + bottom),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: slots),
+      padding: EdgeInsets.only(bottom: bottom + 6),
+      child: SizedBox(
+        height: 64,
+        child: LayoutBuilder(
+          builder: (context, box) {
+            final w = box.maxWidth / n;
+            return Stack(
+              children: [
+                // Volt indicator slides along the top edge to the active tab.
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 320),
+                  curve: M.out,
+                  left: w * slot + w * .25,
+                  width: w * .5,
+                  top: 0,
+                  height: 3,
+                  child: ColoredBox(color: C.volt),
+                ),
+                Row(children: slots),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -97,88 +119,54 @@ class _Tab extends StatelessWidget {
       onTap: onTap,
       haptic: false,
       semanticLabel: item.label,
-      scale: 0.94,
-      child: SizedBox(
-        height: 54,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                AnimatedContainer(
-                  duration: M.base,
-                  curve: M.out,
-                  width: active ? 52 : 32,
-                  height: 30,
-                  decoration: BoxDecoration(color: active ? C.ink : Colors.transparent, borderRadius: BorderRadius.circular(R.pill)),
-                  child: AnimatedSwitcher(
-                    duration: M.fast,
-                    transitionBuilder: (c, a) => ScaleTransition(
-                      scale: Tween(begin: .7, end: 1.0).animate(CurvedAnimation(parent: a, curve: M.out)),
-                      child: FadeTransition(opacity: a, child: c),
-                    ),
-                    child: Icon(active ? item.activeIcon : item.icon, key: ValueKey(active), size: 20, color: active ? C.paper : C.inkSoft),
+      scale: 0.92,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(active ? item.activeIcon : item.icon, size: 22, color: active ? C.volt : C.inkSoft),
+              if (item.badge > 0)
+                Positioned(
+                  right: -9,
+                  top: -5,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    color: C.hot,
+                    child: Text('${item.badge}', style: figs(size: 9.5, weight: FontWeight.w700, color: C.onFill)),
                   ),
                 ),
-                if (item.badge > 0)
-                  Positioned(
-                    right: -2,
-                    top: -4,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: C.orange,
-                        borderRadius: BorderRadius.circular(R.pill),
-                        border: Border.all(color: C.ink, width: 1.2),
-                      ),
-                      child: Text(
-                        '${item.badge}',
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: C.ink),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            AnimatedDefaultTextStyle(
-              duration: M.fast,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                color: active ? C.ink : C.inkSoft,
-                fontFamily: DefaultTextStyle.of(context).style.fontFamily,
-              ),
-              child: Text(item.label),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          AnimatedDefaultTextStyle(
+            duration: M.fast,
+            style: figs(size: 9.5, weight: FontWeight.w700, color: active ? C.ink : C.inkSoft),
+            child: Text(item.label.toUpperCase(), maxLines: 1),
+          ),
+        ],
       ),
     );
   }
 }
 
+/// "Post a job": a volt square with a plus, raised a little above the bar.
 class _CenterAction extends StatelessWidget {
   const _CenterAction(this.c);
   final ({IconData icon, String label, VoidCallback onTap}) c;
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+    return Center(
       child: Pressable(
         onTap: c.onTap,
         semanticLabel: c.label,
-        scale: 0.92,
+        scale: 0.88,
         child: Container(
-          width: 58,
-          height: 50,
-          decoration: BoxDecoration(
-            color: C.orange,
-            borderRadius: BorderRadius.circular(R.md),
-            border: Border.all(color: C.ink, width: 2),
-            boxShadow: tagShadow,
-          ),
-          child: Icon(c.icon, color: C.ink, size: 26),
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(color: C.volt, borderRadius: BorderRadius.circular(R.sm), boxShadow: glow),
+          child: Icon(c.icon, color: C.onFill, size: 26),
         ),
       ),
     );

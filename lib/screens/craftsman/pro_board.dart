@@ -20,16 +20,14 @@ class ProBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
-    final top = MediaQuery.paddingOf(context).top;
     final list = s.board.where((j) => kmFrom(me.location, j.location) <= s.radiusKm).toList()..sort((a, b) => a.urgency.index.compareTo(b.urgency.index));
 
-    return ListView(
-      padding: EdgeInsets.fromLTRB(S.gutter, top + 14, S.gutter, S.xl),
+    return TabPage(
+      eyebrow: 'NEW WORK',
+      title: 'Open',
+      accent: 'requests',
+      subtitle: '${me.trade.label} · within ${s.radiusKm} km of ${me.commune}',
       children: [
-        Text('Requests', style: display(size: 28)),
-        const SizedBox(height: 4),
-        Text('${me.trade.label} · within ${s.radiusKm} km of ${me.commune}', style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: S.lg),
         TagCard(
           padding: const EdgeInsets.fromLTRB(14, 10, 8, 4),
           child: Column(
@@ -40,7 +38,7 @@ class ProBoard extends StatelessWidget {
                   const SizedBox(width: 8),
                   const Text('Alert radius', style: TextStyle(fontWeight: FontWeight.w700)),
                   const Spacer(),
-                  Text('${s.radiusKm} km', style: mono(size: 13, weight: FontWeight.w700)),
+                  Text('${s.radiusKm} km', style: figs(size: 13, weight: FontWeight.w700)),
                   const SizedBox(width: 6),
                 ],
               ),
@@ -63,7 +61,7 @@ class ProBoard extends StatelessWidget {
             padding: const EdgeInsets.only(top: 40),
             child: Column(
               children: [
-                const Icon(PhosphorIconsBold.tray, size: 44, color: C.inkSoft),
+                Icon(PhosphorIconsBold.tray, size: 44, color: C.inkSoft),
                 const SizedBox(height: 12),
                 Text('No open requests', style: display(size: 18)),
                 const SizedBox(height: 6),
@@ -99,7 +97,7 @@ class ProBoard extends StatelessWidget {
             child: Center(
               child: Text(
                 'SWIPE → QUOTE   ·   ← PASS',
-                style: mono(size: 10.5, color: C.inkSoft, weight: FontWeight.w700),
+                style: figs(size: 10.5, color: C.inkSoft, weight: FontWeight.w700),
               ),
             ),
           ),
@@ -114,11 +112,11 @@ class ProBoard extends StatelessWidget {
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(accept ? PhosphorIconsBold.check : PhosphorIconsBold.x, color: accept ? Colors.white : C.ink),
+        Icon(accept ? PhosphorIconsBold.check : PhosphorIconsBold.x, color: accept ? C.onFill : C.ink),
         const SizedBox(width: 8),
         Text(
           accept ? 'Quote' : 'Pass',
-          style: TextStyle(fontWeight: FontWeight.w800, color: accept ? Colors.white : C.ink),
+          style: TextStyle(fontWeight: FontWeight.w700, color: accept ? C.onFill : C.ink),
         ),
       ],
     ),
@@ -141,13 +139,13 @@ class _RequestCard extends StatelessWidget {
             children: [
               UrgencyChip(job.urgency),
               const SizedBox(width: 8),
-              Text(ago(job.postedMinsAgo), style: mono(size: 11, color: C.inkSoft)),
+              Text(ago(job.postedMinsAgo), style: figs(size: 11, color: C.inkSoft)),
               const Spacer(),
-              const Icon(PhosphorIconsFill.navigationArrow, size: 13, color: C.rust),
+              Icon(PhosphorIconsFill.navigationArrow, size: 13, color: C.hotText),
               const SizedBox(width: 4),
               Text(
                 km(d),
-                style: mono(size: 12, weight: FontWeight.w700, color: C.rust),
+                style: figs(size: 12, weight: FontWeight.w700, color: C.hotText),
               ),
             ],
           ),
@@ -159,7 +157,7 @@ class _RequestCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(job.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                    Text(job.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                     const SizedBox(height: 4),
                     Text(job.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall),
                   ],
@@ -173,7 +171,7 @@ class _RequestCard extends StatelessWidget {
             children: [
               Text('${job.clientName} · ${job.commune}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               const Spacer(),
-              Text(job.budgetHint ?? '', style: mono(size: 12, weight: FontWeight.w700)),
+              Text(job.budgetHint ?? '', style: figs(size: 12, weight: FontWeight.w700)),
             ],
           ),
         ],
@@ -229,7 +227,7 @@ class _JobSheetState extends State<_JobSheet> {
             children: [
               UrgencyChip(j.urgency),
               const SizedBox(width: 8),
-              Text(j.id, style: mono(size: 11, color: C.inkSoft)),
+              Text(j.id, style: figs(size: 11, color: C.inkSoft)),
             ],
           ),
           const SizedBox(height: 10),
@@ -248,7 +246,7 @@ class _JobSheetState extends State<_JobSheet> {
           const SizedBox(height: S.lg),
           Text(
             'YOUR PRICE',
-            style: mono(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+            style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
           ),
           const SizedBox(height: 8),
           Row(
@@ -268,7 +266,7 @@ class _JobSheetState extends State<_JobSheet> {
                     child: Text(
                       dzd(_price),
                       key: ValueKey(_price),
-                      style: mono(size: 28, weight: FontWeight.w700),
+                      style: figs(size: 28, weight: FontWeight.w700),
                     ),
                   ),
                 ),
@@ -278,7 +276,7 @@ class _JobSheetState extends State<_JobSheet> {
           ),
           const SizedBox(height: 4),
           Center(
-            child: Text('Client budget: ${j.budgetHint ?? 'open'}', style: mono(size: 11, color: C.inkSoft)),
+            child: Text('Client budget: ${j.budgetHint ?? 'open'}', style: figs(size: 11, color: C.inkSoft)),
           ),
           const SizedBox(height: S.lg),
           Row(

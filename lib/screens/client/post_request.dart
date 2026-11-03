@@ -77,7 +77,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
     // The confirmation pops with true for "Track this job"; this form then
     // replaces itself so Back from the job lands on Home, not on the form.
     if (track == true) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => JobDetailScreen(job: job)));
+      Navigator.of(context).pushReplacement(wipeRoute(JobDetailScreen(job: job)));
     } else {
       Navigator.of(context).pop();
     }
@@ -109,7 +109,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                       children: [
                         Text(
                           'STEP ${pos + 1} OF $total · ${_stepNames[_step].toUpperCase()}',
-                          style: mono(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+                          style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
                         ),
                         const SizedBox(height: 6),
                         ClipRRect(
@@ -118,7 +118,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                             tween: Tween(end: (pos + 1) / total),
                             duration: M.slow,
                             curve: M.out,
-                            builder: (_, v, _) => LinearProgressIndicator(value: v, minHeight: 6, backgroundColor: C.line, color: C.orange),
+                            builder: (_, v, _) => LinearProgressIndicator(value: v, minHeight: 6, backgroundColor: C.line, color: C.volt),
                           ),
                         ),
                       ],
@@ -140,7 +140,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                       Expanded(
                         child: Text(
                           widget.quoteOnly ? 'Asking ${widget.direct!.name} for a quote' : 'Booking ${widget.direct!.name} directly',
-                          style: const TextStyle(fontWeight: FontWeight.w700, color: C.teal),
+                          style: TextStyle(fontWeight: FontWeight.w700, color: C.teal),
                         ),
                       ),
                     ],
@@ -175,7 +175,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
             ),
             Container(
               padding: EdgeInsets.fromLTRB(S.gutter, 12, S.gutter, 12 + pad.bottom),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: C.card,
                 border: Border(top: BorderSide(color: C.line, width: 1.5)),
               ),
@@ -195,7 +195,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
   Widget _h(String t, [String? sub]) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(t, style: display(size: 28)),
+      Headline(t.replaceAll('\n', ' '), style: display(size: 28)),
       if (sub != null) ...[const SizedBox(height: 6), Text(sub, style: Theme.of(context).textTheme.bodySmall)],
       const SizedBox(height: S.xl),
     ],
@@ -227,18 +227,21 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                   curve: M.out,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: _trade == t ? C.orange : C.card,
+                    color: _trade == t ? C.volt : C.card,
                     borderRadius: BorderRadius.circular(R.md),
-                    border: Border.all(color: _trade == t ? C.ink : C.line, width: 2),
-                    boxShadow: _trade == t ? tagShadow : null,
+                    border: Border.all(color: _trade == t ? C.volt : C.line),
+                    boxShadow: _trade == t ? lift : null,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(t.icon, size: 26),
+                      Icon(t.icon, size: 26, color: _trade == t ? C.onFill : C.volt),
                       const Spacer(),
-                      Text(t.label, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                      Text(t.local, style: mono(size: 10.5, color: _trade == t ? C.ink : C.inkSoft)),
+                      Text(
+                        t.label,
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: _trade == t ? C.onFill : C.ink),
+                      ),
+                      Text(t.local, style: figs(size: 10.5, color: _trade == t ? C.onFillSoft : C.inkSoft)),
                     ],
                   ),
                 ),
@@ -275,10 +278,10 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
           children: [
             Text(
               'PHOTOS',
-              style: mono(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+              style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
             ),
             const Spacer(),
-            Text('${_photos.length}/4', style: mono(size: 11, color: C.inkSoft)),
+            Text('${_photos.length}/4', style: figs(size: 11, color: C.inkSoft)),
           ],
         ),
         const SizedBox(height: 10),
@@ -309,7 +312,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                               shape: BoxShape.circle,
                               border: Border.all(color: C.card, width: 2),
                             ),
-                            child: const Icon(PhosphorIconsBold.x, size: 12, color: C.paper),
+                            child: Icon(PhosphorIconsBold.x, size: 12, color: C.bg),
                           ),
                         ),
                       ),
@@ -408,10 +411,10 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                 curve: M.out,
                 padding: const EdgeInsets.all(S.lg),
                 decoration: BoxDecoration(
-                  color: _urgency == u ? (u == Urgency.now ? C.orange : C.card) : C.paper,
-                  borderRadius: BorderRadius.circular(R.lg),
-                  border: Border.all(color: _urgency == u ? C.ink : C.line, width: 2),
-                  boxShadow: _urgency == u ? tagShadow : null,
+                  color: _urgency == u ? (u == Urgency.now ? C.hot : C.card) : C.bg,
+                  borderRadius: BorderRadius.circular(R.lg - 4),
+                  border: Border.all(color: _urgency == u ? (u == Urgency.now ? C.hot : C.volt) : C.line, width: _urgency == u ? 1.5 : 1),
+                  boxShadow: _urgency == u ? lift : null,
                 ),
                 child: Row(
                   children: [
@@ -419,18 +422,24 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                       Urgency.now => PhosphorIconsBold.siren,
                       Urgency.today => PhosphorIconsBold.clock,
                       Urgency.week => PhosphorIconsBold.calendarBlank,
-                    }, size: 24),
+                    }, size: 24, color: _urgency == u && u == Urgency.now ? C.onFill : C.volt),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(u.label, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                          Text(u.hint, style: TextStyle(fontSize: 13, color: _urgency == u && u == Urgency.now ? C.ink : C.inkSoft)),
+                          Text(
+                            u.label,
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: _urgency == u && u == Urgency.now ? C.onFill : C.ink),
+                          ),
+                          Text(
+                            u.hint,
+                            style: TextStyle(fontSize: 13, color: _urgency == u && u == Urgency.now ? C.onFillSoft : C.inkSoft),
+                          ),
                         ],
                       ),
                     ),
-                    AnimatedScale(scale: _urgency == u ? 1 : 0, duration: M.fast, curve: M.spring, child: const Icon(PhosphorIconsFill.checkCircle)),
+                    AnimatedScale(scale: _urgency == u ? 1 : 0, duration: M.fast, curve: M.spring, child: Icon(PhosphorIconsFill.checkCircle, color: u == Urgency.now ? C.onFill : C.volt)),
                   ],
                 ),
               ),
@@ -439,7 +448,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
         const SizedBox(height: S.lg),
         Text(
           'WHERE',
-          style: mono(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+          style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
         ),
         const SizedBox(height: 10),
         TagCard(
@@ -448,11 +457,11 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(color: C.orangeWash, borderRadius: BorderRadius.circular(R.md)),
-                child: const Icon(PhosphorIconsFill.mapPin, color: C.rust),
+                decoration: BoxDecoration(color: C.voltWash, borderRadius: BorderRadius.circular(R.md)),
+                child: Icon(PhosphorIconsFill.mapPin, color: C.volt),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -463,7 +472,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
               ),
               Text(
                 'Change',
-                style: TextStyle(fontWeight: FontWeight.w700, color: C.rust.withValues(alpha: 1)),
+                style: TextStyle(fontWeight: FontWeight.w700, color: C.hotText.withValues(alpha: 1)),
               ),
             ],
           ),
@@ -484,7 +493,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
             width: 92,
             child: Text(
               k.toUpperCase(),
-              style: mono(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+              style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
             ),
           ),
           Expanded(
@@ -506,7 +515,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                 children: [
                   Icon(_trade!.icon, size: 20),
                   const SizedBox(width: 8),
-                  Text(_trade!.label.toUpperCase(), style: mono(size: 12, weight: FontWeight.w700)),
+                  Text(_trade!.label.toUpperCase(), style: figs(size: 12, weight: FontWeight.w700)),
                   const Spacer(),
                   UrgencyChip(_urgency),
                 ],
@@ -526,7 +535,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                   ],
                 ),
               ],
-              const Divider(height: 28, color: C.line),
+              Divider(height: 28, color: C.line),
               row('Where', 'Kouba, Alger'),
               row('Sent to', widget.direct?.name ?? "$reach $who within 10 km"),
             ],
@@ -535,7 +544,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
         const SizedBox(height: S.lg),
         Row(
           children: [
-            const Icon(PhosphorIconsBold.lockSimple, size: 14, color: C.inkSoft),
+            Icon(PhosphorIconsBold.lockSimple, size: 14, color: C.inkSoft),
             const SizedBox(width: 6),
             Expanded(child: Text('Your phone number stays hidden until you accept a quote.', style: Theme.of(context).textTheme.bodySmall)),
           ],
@@ -577,7 +586,7 @@ class _Posted extends StatelessWidget {
                         height: 220,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: C.orange, width: 2),
+                          border: Border.all(color: C.volt, width: 2),
                         ),
                       )
                       .animate(onPlay: (c) => c.repeat(), delay: (i * 600).ms)
@@ -595,11 +604,11 @@ class _Posted extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: C.orange,
+              color: C.volt,
               shape: BoxShape.circle,
-              border: Border.all(color: C.ink, width: 2),
+              boxShadow: lift,
             ),
-            child: Icon(job.trade.icon, size: 28),
+            child: Icon(job.trade.icon, size: 28, color: C.onFill),
           ),
         ],
       ),
@@ -614,20 +623,14 @@ class _Posted extends StatelessWidget {
               const Spacer(),
               radar,
               const SizedBox(height: S.xl),
-              Transform.rotate(
-                angle: -0.05,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: C.rust, width: 2.5),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'POSTED · ${job.id}',
-                    style: mono(size: 16, weight: FontWeight.w700, color: C.rust),
-                  ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(color: C.voltWash, borderRadius: BorderRadius.circular(R.pill)),
+                child: Text(
+                  'Posted · ${job.id}',
+                  style: figs(size: 14, weight: FontWeight.w700, color: C.volt),
                 ),
-              ).animate().scale(begin: const Offset(1.8, 1.8), end: const Offset(1, 1), duration: 360.ms, curve: M.spring).fadeIn(duration: 100.ms),
+              ).animate().scale(begin: const Offset(1.4, 1.4), end: const Offset(1, 1), duration: 360.ms, curve: M.spring).fadeIn(duration: 100.ms),
               const SizedBox(height: S.lg),
               Text(
                 direct != null ? '${direct!.firstName} has your request' : "Alerting m'lems near you",

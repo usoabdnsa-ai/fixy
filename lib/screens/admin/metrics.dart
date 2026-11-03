@@ -23,23 +23,17 @@ class _MetricsScreenState extends State<MetricsScreen> {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
-    final top = MediaQuery.paddingOf(context).top;
     final req = requestsPerDay.sublist(requestsPerDay.length - _range);
     final done = completedPerDay.sublist(completedPerDay.length - _range);
     final totalReq = req.reduce((a, b) => a + b);
     final totalDone = done.reduce((a, b) => a + b);
     final verified = craftsmen.where((c) => c.verified).length;
 
-    return ListView(
-      padding: EdgeInsets.fromLTRB(S.gutter, top + 14, S.gutter, S.xl),
+    return TabPage(
+      eyebrow: 'ADMIN · ALL WILAYAS',
+      title: 'Platform',
+      accent: 'today',
       children: [
-        Text(
-          'ADMIN · ALL WILAYAS',
-          style: mono(size: 11.5, weight: FontWeight.w700, color: C.rust),
-        ),
-        const SizedBox(height: 4),
-        Text('Platform today', style: display(size: 28)),
-        const SizedBox(height: S.lg),
         // Filters sit in one row above the charts.
         Row(
           children: [
@@ -53,13 +47,13 @@ class _MetricsScreenState extends State<MetricsScreen> {
                     duration: M.fast,
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: _range == r ? C.ink : C.card,
+                      color: _range == r ? C.volt : C.card,
                       borderRadius: BorderRadius.circular(R.pill),
-                      border: Border.all(color: _range == r ? C.ink : C.line, width: 1.5),
+                      border: Border.all(color: _range == r ? C.volt : C.line),
                     ),
                     child: Text(
                       'Last $r days',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: _range == r ? C.paper : C.ink),
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: _range == r ? C.onFill : C.ink),
                     ),
                   ),
                 ),
@@ -99,7 +93,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Requests vs completed jobs', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              const Text('Requests vs completed jobs', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
               const SizedBox(height: 8),
               Row(children: [_legend(C.seriesA, 'Requests', '$totalReq'), const SizedBox(width: 16), _legend(C.seriesB, 'Completed', '$totalDone')]),
               const SizedBox(height: 12),
@@ -112,7 +106,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Requests by trade, %', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              const Text('Requests by trade, %', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
               const SizedBox(height: 12),
               for (final e in tradeShare.entries) _ShareBar(trade: e.key, pct: e.value),
             ],
@@ -132,7 +126,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
       const SizedBox(width: 6),
       Text(label, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
       const SizedBox(width: 6),
-      Text(v, style: mono(size: 12, weight: FontWeight.w700)),
+      Text(v, style: figs(size: 12, weight: FontWeight.w700)),
     ],
   );
 }
@@ -156,12 +150,12 @@ class _Stat extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: mono(size: 10, weight: FontWeight.w700, color: C.inkSoft),
+            style: figs(size: 10, weight: FontWeight.w700, color: C.inkSoft),
           ),
           const SizedBox(height: 6),
-          Text(value, style: mono(size: 22, weight: FontWeight.w700)),
+          Text(value, style: figs(size: 22, weight: FontWeight.w700)),
           const SizedBox(height: 2),
-          Text(delta, style: mono(size: 11, color: C.inkSoft)),
+          Text(delta, style: figs(size: 11, color: C.inkSoft)),
         ],
       ),
     );
@@ -215,14 +209,14 @@ class _LineChartState extends State<_LineChart> with SingleTickerProviderStateMi
             SizedBox(
               height: 26,
               child: _hover == null
-                  ? Text('Drag across the chart for daily values', style: mono(size: 11, color: C.inkSoft))
+                  ? Text('Drag across the chart for daily values', style: figs(size: 11, color: C.inkSoft))
                   : Row(
                       children: [
-                        Text('Day ${_hover! + 1 - n}', style: mono(size: 11.5, weight: FontWeight.w700)),
+                        Text('Day ${_hover! + 1 - n}', style: figs(size: 11.5, weight: FontWeight.w700)),
                         const SizedBox(width: 12),
-                        Text('Requests ${widget.a[_hover!]}', style: mono(size: 11.5)),
+                        Text('Requests ${widget.a[_hover!]}', style: figs(size: 11.5)),
                         const SizedBox(width: 12),
-                        Text('Completed ${widget.b[_hover!]}', style: mono(size: 11.5)),
+                        Text('Completed ${widget.b[_hover!]}', style: figs(size: 11.5)),
                       ],
                     ),
             ),
@@ -246,9 +240,9 @@ class _LineChartState extends State<_LineChart> with SingleTickerProviderStateMi
               padding: const EdgeInsets.only(left: 28),
               child: Row(
                 children: [
-                  Text('$n days ago', style: mono(size: 10, color: C.inkSoft)),
+                  Text('$n days ago', style: figs(size: 10, color: C.inkSoft)),
                   const Spacer(),
-                  Text('today', style: mono(size: 10, color: C.inkSoft)),
+                  Text('today', style: figs(size: 10, color: C.inkSoft)),
                 ],
               ),
             ),
@@ -281,7 +275,7 @@ class _ChartPainter extends CustomPainter {
       canvas.drawLine(Offset(left, y), Offset(size.width, y), grid);
       tp.text = TextSpan(
         text: '${(maxV * (1 - i / 2)).round()}',
-        style: mono(size: 9.5, color: C.inkSoft),
+        style: figs(size: 9.5, color: C.inkSoft),
       );
       tp.layout();
       tp.paint(canvas, Offset(0, y - tp.height / 2));
@@ -330,8 +324,9 @@ class _ChartPainter extends CustomPainter {
     }
   }
 
+  final bool _light = C.isLight;
   @override
-  bool shouldRepaint(covariant _ChartPainter old) => old.t != t || old.hover != hover || old.a != a;
+  bool shouldRepaint(covariant _ChartPainter old) => old._light != _light || old.t != t || old.hover != hover || old.a != a;
 }
 
 class _ShareBar extends StatelessWidget {
@@ -362,7 +357,7 @@ class _ShareBar extends StatelessWidget {
                   child: Container(
                     height: 12,
                     decoration: BoxDecoration(
-                      color: C.ink,
+                      color: C.volt,
                       borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
                     ),
                   ),
@@ -376,7 +371,7 @@ class _ShareBar extends StatelessWidget {
             child: Text(
               '$pct',
               textAlign: TextAlign.right,
-              style: mono(size: 12, weight: FontWeight.w700),
+              style: figs(size: 12, weight: FontWeight.w700),
             ),
           ),
         ],

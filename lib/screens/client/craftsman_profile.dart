@@ -34,7 +34,7 @@ class CraftsmanProfileScreen extends StatelessWidget {
             expandedHeight: 230,
             pinned: true,
             stretch: true,
-            backgroundColor: C.paper,
+            backgroundColor: C.bg,
             surfaceTintColor: Colors.transparent,
             leading: Padding(
               padding: const EdgeInsets.all(6),
@@ -54,7 +54,7 @@ class CraftsmanProfileScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: C.card,
                         shape: BoxShape.circle,
-                        border: Border.all(color: C.line, width: 1.5),
+                        boxShadow: lift,
                       ),
                       child: AnimatedSwitcher(
                         duration: M.fast,
@@ -62,7 +62,7 @@ class CraftsmanProfileScreen extends StatelessWidget {
                           scale: CurvedAnimation(parent: a, curve: M.spring),
                           child: w,
                         ),
-                        child: Icon(fav ? PhosphorIconsFill.heart : PhosphorIconsBold.heart, key: ValueKey(fav), color: fav ? C.rust : C.ink, size: 20),
+                        child: Icon(fav ? PhosphorIconsFill.heart : PhosphorIconsBold.heart, key: ValueKey(fav), color: fav ? C.hotText : C.ink, size: 20),
                       ),
                     ),
                   ),
@@ -70,21 +70,27 @@ class CraftsmanProfileScreen extends StatelessWidget {
             ],
             flexibleSpace: FlexibleSpaceBar(
               stretchModes: const [StretchMode.zoomBackground],
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset('assets/photos/${c.photos.first}.jpg', fit: BoxFit.cover),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0x00000000), Color(0x22000000), Color(0xEEF4EEE3)],
-                        stops: [0, .55, 1],
+              background: ClipRect(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset('assets/photos/${c.photos.first}.jpg', fit: BoxFit.cover),
+                    // Dark fade top and bottom keeps the buttons readable and melts the photo into the page.
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.black.withValues(alpha: .55), C.bg.withValues(alpha: 0), C.bg],
+                          stops: [0, .4, 1],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    const Scanlines(opacity: .06),
+                    // Volt strip along the bottom edge.
+                    Positioned(left: 0, bottom: 0, width: 72, height: 4, child: ColoredBox(color: C.volt)),
+                  ],
+                ),
               ),
             ),
           ),
@@ -106,7 +112,7 @@ class CraftsmanProfileScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(c.name, style: display(size: 28)),
+                  Headline(c.name.split(' ').first, accent: c.name.split(' ').skip(1).join(' '), style: display(size: 44, weight: FontWeight.w800).copyWith(height: 1)),
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -168,7 +174,7 @@ class CraftsmanProfileScreen extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
                           children: [
-                            const Icon(PhosphorIconsBold.certificate, size: 18, color: C.teal),
+                            Icon(PhosphorIconsBold.certificate, size: 18, color: C.teal),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(cert, style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -192,7 +198,7 @@ class CraftsmanProfileScreen extends StatelessWidget {
           ? null
           : Container(
               padding: EdgeInsets.fromLTRB(S.gutter, 12, S.gutter, 12 + pad.bottom),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: C.card,
                 border: Border(top: BorderSide(color: C.line, width: 1.5)),
               ),
@@ -202,7 +208,7 @@ class CraftsmanProfileScreen extends StatelessWidget {
                     child: TagButton.light(
                       label: 'Get a quote',
                       onTap: () =>
-                          Navigator.of(context).push(MaterialPageRoute(fullscreenDialog: true, builder: (_) => PostRequestScreen(direct: c, quoteOnly: true))),
+                          Navigator.of(context).push(wipeRoute(fullscreenDialog: true, PostRequestScreen(direct: c, quoteOnly: true))),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -211,7 +217,7 @@ class CraftsmanProfileScreen extends StatelessWidget {
                       label: c.available ? 'Book now' : 'Busy today',
                       icon: c.available ? PhosphorIconsBold.lightning : null,
                       onTap: c.available
-                          ? () => Navigator.of(context).push(MaterialPageRoute(fullscreenDialog: true, builder: (_) => PostRequestScreen(direct: c)))
+                          ? () => Navigator.of(context).push(wipeRoute(fullscreenDialog: true, PostRequestScreen(direct: c)))
                           : null,
                     ),
                   ),
@@ -271,7 +277,7 @@ class _StatStrip extends StatelessWidget {
     Widget cell(String v, String k) => Expanded(
       child: Column(
         children: [
-          Text(v, style: mono(size: 17, weight: FontWeight.w700)),
+          Text(v, style: figs(size: 17, weight: FontWeight.w700)),
           const SizedBox(height: 2),
           Text(k, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11.5)),
         ],
@@ -307,7 +313,7 @@ class _RateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(S.lg),
-      decoration: BoxDecoration(color: C.ink, borderRadius: BorderRadius.circular(R.lg)),
+      decoration: BoxDecoration(color: C.volt, borderRadius: BorderRadius.circular(R.lg - 4)),
       child: Row(
         children: [
           Expanded(
@@ -316,17 +322,17 @@ class _RateCard extends StatelessWidget {
               children: [
                 Text(
                   'HOURLY',
-                  style: mono(size: 10.5, color: const Color(0xFFBDB3A2), weight: FontWeight.w700),
+                  style: figs(size: 10.5, color: C.onFillSoft, weight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   dzd(c.hourly),
-                  style: mono(size: 22, color: C.paper, weight: FontWeight.w700),
+                  style: figs(size: 22, color: C.onFill, weight: FontWeight.w700),
                 ),
               ],
             ),
           ),
-          Container(width: 1.5, height: 40, color: const Color(0xFF3A362F)),
+          Container(width: 1.5, height: 40, color: C.lineStrong),
           const SizedBox(width: S.lg),
           Expanded(
             child: Column(
@@ -334,12 +340,12 @@ class _RateCard extends StatelessWidget {
               children: [
                 Text(
                   'CALL-OUT',
-                  style: mono(size: 10.5, color: const Color(0xFFBDB3A2), weight: FontWeight.w700),
+                  style: figs(size: 10.5, color: C.onFillSoft, weight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   c.callout == 0 ? 'Free' : dzd(c.callout),
-                  style: mono(size: 22, color: C.orange, weight: FontWeight.w700),
+                  style: figs(size: 22, color: C.volt, weight: FontWeight.w700),
                 ),
               ],
             ),
@@ -376,7 +382,7 @@ class _Bar extends StatelessWidget {
                     curve: M.out,
                     builder: (_, v, _) => FractionallySizedBox(
                       widthFactor: v,
-                      child: Container(height: 10, color: C.ink),
+                      child: Container(height: 10, color: C.volt),
                     ),
                   ),
                 ],
@@ -384,7 +390,7 @@ class _Bar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Text(value.toStringAsFixed(1), style: mono(size: 13, weight: FontWeight.w700)),
+          Text(value.toStringAsFixed(1), style: figs(size: 13, weight: FontWeight.w700)),
         ],
       ),
     );
@@ -413,7 +419,7 @@ class _ReviewTile extends StatelessWidget {
               const SizedBox(width: 8),
               Stars(value: r.average, size: 12),
               const Spacer(),
-              Text(r.daysAgo == 0 ? 'today' : '${r.daysAgo}d ago', style: mono(size: 11, color: C.inkSoft)),
+              Text(r.daysAgo == 0 ? 'today' : '${r.daysAgo}d ago', style: figs(size: 11, color: C.inkSoft)),
             ],
           ),
           const SizedBox(height: 6),
@@ -421,11 +427,11 @@ class _ReviewTile extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(PhosphorIconsBold.sealCheck, size: 13, color: C.teal),
+              Icon(PhosphorIconsBold.sealCheck, size: 13, color: C.teal),
               const SizedBox(width: 4),
               Text(
                 'Verified job on Fixy',
-                style: mono(size: 10.5, color: C.teal, weight: FontWeight.w600),
+                style: figs(size: 10.5, color: C.teal, weight: FontWeight.w600),
               ),
             ],
           ),

@@ -9,7 +9,6 @@ import '../../theme/theme.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/kit.dart';
 import 'auth.dart';
-import 'splash.dart';
 
 /// Three slides, each one a picture of the product doing the thing,
 /// with a one-line caption. No paragraphs.
@@ -37,7 +36,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          const Positioned.fill(child: BenchGrid()),
           Column(
             children: [
               SizedBox(height: pad.top + 12),
@@ -49,24 +47,48 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const Spacer(),
                     Pressable(
                       onTap: _finish,
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.all(8),
-                        child: Text(
-                          'Skip',
-                          style: TextStyle(fontWeight: FontWeight.w700, color: C.inkSoft),
-                        ),
+                        child: Text('SKIP', style: TextStyle(fontWeight: FontWeight.w700, color: C.inkSoft, letterSpacing: 1.2)),
                       ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(height: S.md),
+              // The slides play inside a hairline frame with volt corner brackets
+              // and a mono step counter, like a viewfinder.
               Expanded(
-                child: PageView(
-                  controller: _pc,
-                  onPageChanged: (i) => setState(() => _page = i),
-                  children: const [_SlidePost(), _SlideVerified(), _SlideQuotes()],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: S.gutter),
+                  child: Container(
+                    decoration: BoxDecoration(color: C.card, border: Border.all(color: C.line)),
+                    child: Stack(
+                      children: [
+                        const Positioned.fill(child: Scanlines(opacity: .035)),
+                        const Positioned.fill(child: _Brackets()),
+                        Positioned(
+                          left: 14,
+                          top: 12,
+                          child: Text(
+                            '${idx(_page)} / 03',
+                            style: figs(size: 11.5, weight: FontWeight.w700, color: C.volt).copyWith(letterSpacing: 1.2),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 40),
+                          child: PageView(
+                            controller: _pc,
+                            onPageChanged: (i) => setState(() => _page = i),
+                            children: const [_SlidePost(), _SlideVerified(), _SlideQuotes()],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
+              const SizedBox(height: S.xl),
               Padding(
                 padding: EdgeInsets.fromLTRB(S.gutter, 0, S.gutter, pad.bottom + S.xl),
                 child: Column(
@@ -82,7 +104,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: c,
                         ),
                       ),
-                      child: Text(_titles[_page], key: ValueKey(_page), style: display(size: 30)),
+                      child: Headline(
+                        _titles[_page].split('\n').first,
+                        key: ValueKey(_page),
+                        style: display(size: 34, weight: FontWeight.w800).copyWith(height: 1.02),
+                        accent: '\n${_titles[_page].split('\n').last}',
+                        accentStyle: display(size: 34, weight: FontWeight.w800, color: C.volt).copyWith(height: 1.02),
+                      ),
                     ),
                     const SizedBox(height: S.xl),
                     Row(
@@ -92,9 +120,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             duration: M.base,
                             curve: M.out,
                             margin: const EdgeInsets.only(right: 6),
-                            width: i == _page ? 28 : 8,
-                            height: 8,
-                            decoration: BoxDecoration(color: i == _page ? C.ink : C.lineStrong, borderRadius: BorderRadius.circular(R.pill)),
+                            width: i == _page ? 32 : 14,
+                            height: 4,
+                            color: i <= _page ? C.volt : C.lineStrong,
                           ),
                         const Spacer(),
                         TagButton(
@@ -136,7 +164,7 @@ class _SlidePost extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: C.card,
-                    border: Border.all(color: C.ink, width: 2),
+                    border: Border.all(color: C.line),
                     borderRadius: BorderRadius.circular(R.md),
                   ),
                   child: const Photo('plumb-1', width: 240, height: 200, radius: R.sm),
@@ -152,25 +180,24 @@ class _SlidePost extends StatelessWidget {
                   width: 190,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: C.orange,
+                    color: C.hot,
                     borderRadius: BorderRadius.circular(R.md),
-                    border: Border.all(color: C.ink, width: 2),
-                    boxShadow: tagShadow,
+                    boxShadow: lift,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          const Icon(PhosphorIconsBold.pipeWrench, size: 16),
+                          Icon(PhosphorIconsBold.pipeWrench, size: 16, color: C.onFill),
                           const SizedBox(width: 6),
-                          Text('PLUMBING', style: mono(size: 11, weight: FontWeight.w700)),
+                          Text('PLUMBING', style: figs(size: 11, weight: FontWeight.w700, color: C.onFill)),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      const Text('Pipe burst under the sink', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                      Text('Pipe burst under the sink', style: display(size: 17, color: C.onFill)),
                       const SizedBox(height: 6),
-                      Text('KOUBA · RIGHT NOW', style: mono(size: 10.5, weight: FontWeight.w600)),
+                      Text('KOUBA · RIGHT NOW', style: figs(size: 10.5, weight: FontWeight.w600, color: C.onFillSoft)),
                     ],
                   ),
                 ),
@@ -184,11 +211,11 @@ class _SlidePost extends StatelessWidget {
                 decoration: BoxDecoration(color: C.ink, borderRadius: BorderRadius.circular(R.pill)),
                 child: Row(
                   children: [
-                    const Icon(PhosphorIconsFill.bell, size: 14, color: C.orange),
+                    Icon(PhosphorIconsFill.bell, size: 14, color: C.volt),
                     const SizedBox(width: 6),
                     Text(
                       "4 m'lems alerted within 3 km",
-                      style: mono(size: 11, color: C.paper, weight: FontWeight.w600),
+                      style: figs(size: 11, color: C.bg, weight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -210,12 +237,12 @@ class _SlideVerified extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          const Icon(PhosphorIconsFill.checkCircle, size: 18, color: C.teal),
+          Icon(PhosphorIconsFill.checkCircle, size: 18, color: C.teal),
           const SizedBox(width: 10),
           Expanded(
             child: Text(k, style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
-          Text(v, style: mono(size: 12, color: C.inkSoft)),
+          Text(v, style: figs(size: 12, color: C.inkSoft)),
         ],
       ),
     ).animate(delay: (300 + i * 140).ms).fadeIn(duration: 200.ms).moveX(begin: 10, end: 0, curve: M.out);
@@ -226,8 +253,8 @@ class _SlideVerified extends StatelessWidget {
         decoration: BoxDecoration(
           color: C.card,
           borderRadius: BorderRadius.circular(R.lg),
-          border: Border.all(color: C.ink, width: 2),
-          boxShadow: tagShadow,
+          border: Border.all(color: C.line),
+          boxShadow: lift,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -241,7 +268,7 @@ class _SlideVerified extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(c.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+                      Text(c.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
                       Text('${c.trade.local} · ${c.commune}', style: Theme.of(context).textTheme.bodySmall),
                     ],
                   ),
@@ -249,7 +276,7 @@ class _SlideVerified extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            const Divider(color: C.line, height: 1),
+            Divider(color: C.line, height: 1),
             const SizedBox(height: 6),
             row('National ID (NIN)', 'checked', 0),
             row('Trade certificate', 'CFPA 2011', 1),
@@ -288,11 +315,11 @@ class _SlideQuotes extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(quotes[i].$1.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                            Text(quotes[i].$3, style: mono(size: 11, color: C.inkSoft)),
+                            Text(quotes[i].$3, style: figs(size: 11, color: C.inkSoft)),
                           ],
                         ),
                       ),
-                      Text(dzd(quotes[i].$2), style: mono(size: 16, weight: FontWeight.w700)),
+                      Text(dzd(quotes[i].$2), style: figs(size: 16, weight: FontWeight.w700)),
                     ],
                   ),
                 ),
@@ -300,9 +327,9 @@ class _SlideQuotes extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(PhosphorIconsBold.lockSimple, size: 14, color: C.inkSoft),
+                Icon(PhosphorIconsBold.lockSimple, size: 14, color: C.volt),
                 const SizedBox(width: 6),
-                Text('Price locked when you accept', style: mono(size: 11.5, color: C.inkSoft)),
+                Text('Price locked when you accept', style: figs(size: 12, weight: FontWeight.w600, color: C.inkSoft)),
               ],
             ).animate(delay: 520.ms).fadeIn(),
           ],
@@ -310,4 +337,35 @@ class _SlideQuotes extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Volt L-brackets in the four corners of the slide frame.
+class _Brackets extends StatelessWidget {
+  const _Brackets();
+  @override
+  Widget build(BuildContext context) => IgnorePointer(child: CustomPaint(painter: _BracketPainter()));
+}
+
+class _BracketPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const l = 18.0, i = 6.0;
+    final p = Paint()
+      ..color = C.volt
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    final w = size.width, h = size.height;
+    for (final (x, y, dx, dy) in [(i, i, 1.0, 1.0), (w - i, i, -1.0, 1.0), (i, h - i, 1.0, -1.0), (w - i, h - i, -1.0, -1.0)]) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(x, y + dy * l)
+          ..lineTo(x, y)
+          ..lineTo(x + dx * l, y),
+        p,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => true;
 }

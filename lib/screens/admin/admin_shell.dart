@@ -57,7 +57,7 @@ class _AdminAccount extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Moderator · Lina', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                    const Text('Moderator · Lina', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                     Text('Permissions: verify, moderate, read metrics', style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
@@ -68,11 +68,13 @@ class _AdminAccount extends StatelessWidget {
         const SizedBox(height: S.lg),
         Text(
           'ROLE PERMISSIONS (RBAC)',
-          style: mono(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+          style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
         ),
         const SizedBox(height: 8),
         const _RbacTable(),
         const SizedBox(height: S.xl),
+        const ThemeSwitch(),
+        const SizedBox(height: S.md),
         TagButton.light(label: 'Sign out', icon: PhosphorIconsBold.signOut, onTap: () => signOut(context)),
       ],
     );
@@ -111,7 +113,7 @@ class _RbacTable extends StatelessWidget {
                 for (final h in ['Client', "M'lem", 'Admin'])
                   Expanded(
                     child: Center(
-                      child: Text(h, style: mono(size: 10.5, weight: FontWeight.w700)),
+                      child: Text(h, style: figs(size: 10.5, weight: FontWeight.w700)),
                     ),
                   ),
               ],
@@ -120,7 +122,7 @@ class _RbacTable extends StatelessWidget {
           for (final r in rows)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: C.line)),
               ),
               child: Row(

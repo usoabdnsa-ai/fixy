@@ -9,7 +9,7 @@ import '../../theme/tokens.dart';
 import '../../widgets/kit.dart';
 import 'craftsman_profile.dart';
 
-void openProfile(BuildContext context, Craftsman c) => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CraftsmanProfileScreen(craftsman: c)));
+void openProfile(BuildContext context, Craftsman c) => Navigator.of(context).push(wipeRoute(CraftsmanProfileScreen(craftsman: c)));
 
 /// List row for a craftsman: tag avatar, name + stamp, trade/commune,
 /// then a mono data strip (rating · distance · callout).
@@ -42,7 +42,7 @@ class CraftsmanTile extends StatelessWidget {
                         c.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                       ),
                     ),
                     if (c.verified) ...[const SizedBox(width: 8), const VerifiedStamp(small: true)],
@@ -55,9 +55,9 @@ class CraftsmanTile extends StatelessWidget {
                   children: [
                     Stars(value: c.rating, size: 13),
                     _dot(),
-                    Text(km(d), style: mono(size: 12, weight: FontWeight.w600)),
+                    Text(km(d), style: figs(size: 12, weight: FontWeight.w600)),
                     _dot(),
-                    Text('from ${dzd(c.callout + c.hourly)}', style: mono(size: 12, color: C.inkSoft)),
+                    Text('from ${dzd(c.callout + c.hourly)}', style: figs(size: 12, color: C.inkSoft)),
                   ],
                 ),
               ],
@@ -70,7 +70,7 @@ class CraftsmanTile extends StatelessWidget {
     );
   }
 
-  Widget _dot() => const Padding(
+  Widget _dot() => Padding(
     padding: EdgeInsets.symmetric(horizontal: 7),
     child: Text('·', style: TextStyle(color: C.inkSoft)),
   );
@@ -150,7 +150,7 @@ class JobProgress extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: i <= step ? C.teal : C.lineStrong, width: 2),
                         ),
-                        child: i <= step ? const Icon(PhosphorIconsBold.check, size: 10, color: Colors.white) : null,
+                        child: i <= step ? Icon(PhosphorIconsBold.check, size: 10, color: C.onFill) : null,
                       ),
                     ),
                 ],
@@ -167,7 +167,7 @@ class JobProgress extends StatelessWidget {
                   child: Text(
                     names[i],
                     textAlign: i == 0 ? TextAlign.left : (i == 3 ? TextAlign.right : TextAlign.center),
-                    style: mono(size: 10.5, weight: i == step ? FontWeight.w700 : FontWeight.w500, color: i <= step ? C.ink : C.inkSoft),
+                    style: figs(size: 10.5, weight: i == step ? FontWeight.w700 : FontWeight.w500, color: i <= step ? C.ink : C.inkSoft),
                   ),
                 ),
             ],

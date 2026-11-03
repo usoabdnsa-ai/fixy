@@ -18,22 +18,20 @@ class VerifyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
-    final top = MediaQuery.paddingOf(context).top;
     final pending = s.verifications.where((v) => v.decision == null).toList();
     final decided = s.verifications.where((v) => v.decision != null).toList();
-    return ListView(
-      padding: EdgeInsets.fromLTRB(S.gutter, top + 14, S.gutter, S.xl),
+    return TabPage(
+      eyebrow: 'TRUST & SAFETY',
+      title: 'Verify',
+      accent: "m'lems",
+      subtitle: '${pending.length} waiting · target under 24 h',
       children: [
-        Text('Verification', style: display(size: 28)),
-        const SizedBox(height: 4),
-        Text('${pending.length} waiting · target under 24 h', style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: S.lg),
         if (pending.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 30),
             child: Column(
               children: [
-                const Icon(
+                Icon(
                   PhosphorIconsFill.sealCheck,
                   size: 44,
                   color: C.teal,
@@ -52,7 +50,7 @@ class VerifyScreen extends StatelessWidget {
           const SizedBox(height: S.md),
           Text(
             'DECIDED TODAY',
-            style: mono(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+            style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
           ),
           const SizedBox(height: 8),
           for (final v in decided)
@@ -75,7 +73,7 @@ class VerifyScreen extends StatelessWidget {
                       ? const VerifiedStamp(small: true, animate: true)
                       : Text(
                           'REJECTED',
-                          style: mono(size: 10.5, weight: FontWeight.w700, color: C.red),
+                          style: figs(size: 10.5, weight: FontWeight.w700, color: C.red),
                         ),
                 ],
               ),
@@ -114,14 +112,14 @@ class _RequestState extends State<_Request> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(c.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                    Text(c.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                     Text('${c.trade.local} · ${c.commune} · ${c.years} yrs', style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),
               Text(
                 '${v.submittedHoursAgo} h',
-                style: mono(size: 11, color: v.submittedHoursAgo > 12 ? C.rust : C.inkSoft, weight: FontWeight.w700),
+                style: figs(size: 11, color: v.submittedHoursAgo > 12 ? C.hotText : C.inkSoft, weight: FontWeight.w700),
               ),
             ],
           ),
@@ -130,7 +128,7 @@ class _RequestState extends State<_Request> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: C.paper,
+              color: C.bg,
               borderRadius: BorderRadius.circular(R.sm),
               border: Border.all(color: C.lineStrong, width: 1.5),
             ),
@@ -140,7 +138,7 @@ class _RequestState extends State<_Request> {
                   width: 46,
                   height: 56,
                   decoration: BoxDecoration(color: C.line, borderRadius: BorderRadius.circular(4)),
-                  child: const Icon(PhosphorIconsFill.user, color: C.inkSoft),
+                  child: Icon(PhosphorIconsFill.user, color: C.inkSoft),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -149,12 +147,12 @@ class _RequestState extends State<_Request> {
                     children: [
                       Text(
                         'CARTE NATIONALE D\'IDENTITÉ',
-                        style: mono(size: 9.5, weight: FontWeight.w700, color: C.inkSoft),
+                        style: figs(size: 9.5, weight: FontWeight.w700, color: C.inkSoft),
                       ),
                       const SizedBox(height: 4),
-                      Text(c.name.toUpperCase(), style: mono(size: 12, weight: FontWeight.w700)),
+                      Text(c.name.toUpperCase(), style: figs(size: 12, weight: FontWeight.w700)),
                       const SizedBox(height: 2),
-                      Text('NIN ${v.nin}', style: mono(size: 11)),
+                      Text('NIN ${v.nin}', style: figs(size: 11)),
                     ],
                   ),
                 ),
@@ -164,7 +162,7 @@ class _RequestState extends State<_Request> {
           const SizedBox(height: 12),
           Text(
             'CHECKLIST',
-            style: mono(size: 10.5, weight: FontWeight.w700, color: C.inkSoft),
+            style: figs(size: 10.5, weight: FontWeight.w700, color: C.inkSoft),
           ),
           for (var i = 0; i < v.documents.length; i++)
             Pressable(
@@ -191,14 +189,14 @@ class _RequestState extends State<_Request> {
                         scale: _checked.contains(i) ? 1 : 0,
                         duration: M.fast,
                         curve: M.spring,
-                        child: const Icon(PhosphorIconsBold.check, size: 13, color: Colors.white),
+                        child: Icon(PhosphorIconsBold.check, size: 13, color: C.onFill),
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(v.documents[i], style: const TextStyle(fontWeight: FontWeight.w600)),
                     ),
-                    const Icon(PhosphorIconsBold.eye, size: 16, color: C.inkSoft),
+                    Icon(PhosphorIconsBold.eye, size: 16, color: C.inkSoft),
                   ],
                 ),
               ),
@@ -222,7 +220,7 @@ class _RequestState extends State<_Request> {
                 child: TagButton(
                   compact: true,
                   color: C.teal,
-                  textColor: Colors.white,
+                  textColor: C.onFill,
                   label: all ? 'Grant Verified' : 'Check all ${v.documents.length} first',
                   icon: all ? PhosphorIconsBold.sealCheck : null,
                   onTap: all

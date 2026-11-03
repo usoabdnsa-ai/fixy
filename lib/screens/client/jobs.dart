@@ -37,20 +37,18 @@ class _JobsScreenState extends State<JobsScreen> {
     final s = context.watch<AppState>();
     bool isDone(Job j) => j.status == JobStatus.completed || j.status == JobStatus.cancelled;
     final list = s.clientJobs.where((j) => isDone(j) == _done).toList();
-    final top = MediaQuery.paddingOf(context).top;
 
-    return ListView(
-      padding: EdgeInsets.fromLTRB(S.gutter, top + 14, S.gutter, S.xl),
+    return TabPage(
+      eyebrow: 'YOUR REQUESTS',
+      title: 'My',
+      accent: 'jobs',
+      headerChild: _Tabs(
+        left: 'Active · ${s.clientJobs.where((j) => !isDone(j)).length}',
+        right: 'History · ${s.clientJobs.where(isDone).length}',
+        rightSelected: _done,
+        onChanged: (v) => setState(() => _done = v),
+      ),
       children: [
-        Text('My jobs', style: display(size: 28)),
-        const SizedBox(height: S.lg),
-        _Tabs(
-          left: 'Active · ${s.clientJobs.where((j) => !isDone(j)).length}',
-          right: 'History · ${s.clientJobs.where(isDone).length}',
-          rightSelected: _done,
-          onChanged: (v) => setState(() => _done = v),
-        ),
-        const SizedBox(height: S.lg),
         if (_loading)
           for (var i = 0; i < 3; i++) const _SkeletonCard()
         else if (list.isEmpty)
@@ -84,9 +82,9 @@ class _Tabs extends StatelessWidget {
             child: AnimatedDefaultTextStyle(
               duration: M.fast,
               style: TextStyle(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 fontSize: 14,
-                color: rightSelected == isRight ? C.paper : C.ink,
+                color: rightSelected == isRight ? C.bg : C.ink,
                 fontFamily: DefaultTextStyle.of(context).style.fontFamily,
               ),
               child: Text(t),
@@ -112,7 +110,7 @@ class _Tabs extends StatelessWidget {
             child: FractionallySizedBox(
               widthFactor: .5,
               child: Container(
-                decoration: BoxDecoration(color: C.ink, borderRadius: BorderRadius.circular(R.pill)),
+                decoration: BoxDecoration(color: C.volt, borderRadius: BorderRadius.circular(R.pill)),
               ),
             ),
           ),
@@ -132,7 +130,7 @@ class _JobCard extends StatelessWidget {
     final needsRating = job.status == JobStatus.completed && !job.rated;
     return TagCard(
       raised: job.status == JobStatus.quoted || needsRating,
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => JobDetailScreen(job: job))),
+      onTap: () => Navigator.of(context).push(wipeRoute(JobDetailScreen(job: job))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -140,15 +138,15 @@ class _JobCard extends StatelessWidget {
             children: [
               Icon(job.trade.icon, size: 16),
               const SizedBox(width: 6),
-              Text(job.id, style: mono(size: 11, color: C.inkSoft)),
+              Text(job.id, style: figs(size: 11, color: C.inkSoft)),
               const SizedBox(width: 6),
-              Text('· ${ago(job.postedMinsAgo)}', style: mono(size: 11, color: C.inkSoft)),
+              Text('· ${ago(job.postedMinsAgo)}', style: figs(size: 11, color: C.inkSoft)),
               const Spacer(),
               StatusChip(job.status),
             ],
           ),
           const SizedBox(height: 8),
-          Text(job.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          Text(job.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
           const SizedBox(height: 10),
           if (job.status == JobStatus.quoted)
             Row(
@@ -161,7 +159,7 @@ class _JobCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   '${job.quotes.length} quotes · from ${dzd(job.quotes.map((q) => q.amount).reduce((a, b) => a < b ? a : b))}',
-                  style: mono(size: 12, weight: FontWeight.w700, color: C.rust),
+                  style: figs(size: 12, weight: FontWeight.w700, color: C.hotText),
                 ),
               ],
             )
@@ -173,29 +171,29 @@ class _JobCard extends StatelessWidget {
                 Expanded(
                   child: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600)),
                 ),
-                if (job.price != null) Text(dzd(job.price!), style: mono(size: 13, weight: FontWeight.w700)),
+                if (job.price != null) Text(dzd(job.price!), style: figs(size: 13, weight: FontWeight.w700)),
               ],
             )
           else
             Row(
               children: [
-                const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: C.inkSoft)),
+                SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: C.inkSoft)),
                 const SizedBox(width: 8),
-                Text('Waiting for quotes…', style: mono(size: 12, color: C.inkSoft)),
+                Text('Waiting for quotes…', style: figs(size: 12, color: C.inkSoft)),
               ],
             ),
           if (needsRating) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(color: C.orangeWash, borderRadius: BorderRadius.circular(R.sm)),
+              decoration: BoxDecoration(color: C.voltWash, borderRadius: BorderRadius.circular(R.sm)),
               child: Row(
                 children: [
-                  const Icon(PhosphorIconsFill.star, size: 14, color: C.rust),
+                  Icon(PhosphorIconsFill.star, size: 14, color: C.hotText),
                   const SizedBox(width: 6),
                   Text(
                     'Rate ${c?.firstName ?? ''} to close this job',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: C.rust, fontSize: 13),
+                    style: TextStyle(fontWeight: FontWeight.w700, color: C.hotText, fontSize: 13),
                   ),
                 ],
               ),
@@ -248,7 +246,7 @@ class _Empty extends StatelessWidget {
       padding: const EdgeInsets.only(top: 40),
       child: Column(
         children: [
-          const Icon(PhosphorIconsBold.toolbox, size: 44, color: C.inkSoft),
+          Icon(PhosphorIconsBold.toolbox, size: 44, color: C.inkSoft),
           const SizedBox(height: 12),
           Text(done ? 'No finished jobs yet' : 'Nothing broken right now', style: display(size: 18)),
           const SizedBox(height: 6),
@@ -263,7 +261,7 @@ class _Empty extends StatelessWidget {
               label: 'Post a job',
               expand: false,
               icon: PhosphorIconsBold.plus,
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(fullscreenDialog: true, builder: (_) => const PostRequestScreen())),
+              onTap: () => Navigator.of(context).push(wipeRoute(fullscreenDialog: true, const PostRequestScreen())),
             ),
           ],
         ],

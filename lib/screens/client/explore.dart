@@ -105,11 +105,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       ? LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [C.paper, C.paper.withValues(alpha: 0)],
+                          colors: [C.bg, C.bg.withValues(alpha: 0)],
                           stops: const [.6, 1],
                         )
                       : null,
-                  color: _map ? null : C.paper,
+                  color: _map ? null : C.bg,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +167,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   child: _selected != null
                       ? Container(
                           key: ValueKey(_selected!.id),
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(R.lg), boxShadow: tagShadow),
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(R.lg), boxShadow: lift),
                           child: CraftsmanTile(c: _selected!),
                         )
                       : Container(
@@ -177,7 +177,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           child: Text(
                             results.isEmpty ? 'No one matches. Widen the radius.' : "${results.length} m'lems within ${f.radiusKm.round()} km · tap a pin",
                             textAlign: TextAlign.center,
-                            style: mono(size: 12, color: C.paper, weight: FontWeight.w600),
+                            style: figs(size: 12, color: C.bg, weight: FontWeight.w600),
                           ),
                         ),
                 ),
@@ -205,7 +205,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'dz.fixy.app',
           // Warm, low-contrast paper tint so pins stay the loudest thing on the map.
-          tileBuilder: (context, tile, _) => ColorFiltered(colorFilter: const ColorFilter.matrix(_paperTint), child: tile),
+          tileBuilder: (context, tile, _) => ColorFiltered(colorFilter: ColorFilter.matrix(C.isLight ? _dayTint : _nightTint), child: tile),
         ),
         CircleLayer(
           circles: [
@@ -213,8 +213,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
               point: clientHome,
               radius: f.radiusKm * 1000,
               useRadiusInMeter: true,
-              color: C.orange.withValues(alpha: .07),
-              borderColor: C.orange,
+              color: C.volt.withValues(alpha: .07),
+              borderColor: C.volt,
               borderStrokeWidth: 1.5,
             ),
           ],
@@ -258,7 +258,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(PhosphorIconsBold.magnifyingGlass, size: 40, color: C.inkSoft),
+              Icon(PhosphorIconsBold.magnifyingGlass, size: 40, color: C.inkSoft),
               const SizedBox(height: 12),
               Text("No m'lem matches these filters", style: display(size: 18)),
               const SizedBox(height: 6),
@@ -306,7 +306,7 @@ class _Segmented extends StatelessWidget {
           child: Center(
             child: AnimatedSwitcher(
               duration: M.fast,
-              child: Icon(icon, key: ValueKey(map == isMap), size: 18, color: map == isMap ? C.paper : C.ink),
+              child: Icon(icon, key: ValueKey(map == isMap), size: 18, color: map == isMap ? C.onFill : C.ink),
             ),
           ),
         ),
@@ -319,7 +319,7 @@ class _Segmented extends StatelessWidget {
       decoration: BoxDecoration(
         color: C.card,
         borderRadius: BorderRadius.circular(R.pill),
-        border: Border.all(color: C.ink, width: 1.5),
+        border: Border.all(color: C.line),
       ),
       child: Stack(
         children: [
@@ -330,7 +330,7 @@ class _Segmented extends StatelessWidget {
             child: Container(
               width: 43,
               height: 36,
-              decoration: BoxDecoration(color: C.ink, borderRadius: BorderRadius.circular(R.pill)),
+              decoration: BoxDecoration(color: C.volt, borderRadius: BorderRadius.circular(R.pill)),
             ),
           ),
           Row(children: [half(true, PhosphorIconsBold.mapTrifold, 'Map view'), half(false, PhosphorIconsBold.list, 'List view')]),
@@ -358,18 +358,18 @@ class _FilterChip extends StatelessWidget {
           curve: M.out,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: selected ? C.ink : C.card,
+            color: selected ? C.volt : C.card,
             borderRadius: BorderRadius.circular(R.pill),
-            border: Border.all(color: selected ? C.ink : C.line, width: 1.5),
+            border: Border.all(color: selected ? C.volt : C.line),
           ),
           alignment: Alignment.center,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[Icon(icon, size: 15, color: selected ? C.paper : C.ink), const SizedBox(width: 6)],
+              if (icon != null) ...[Icon(icon, size: 15, color: selected ? C.onFill : C.ink), const SizedBox(width: 6)],
               Text(
                 label,
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: selected ? C.paper : C.ink),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: selected ? C.onFill : C.ink),
               ),
             ],
           ),
@@ -402,14 +402,14 @@ class _Pin extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: selected ? C.orange : (c.available ? C.card : C.paper),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: C.ink, width: 2),
-                boxShadow: tagShadow,
+                color: selected ? C.volt : (c.available ? C.card : C.bg),
+                shape: BoxShape.circle,
+                border: Border.all(color: selected ? C.card : C.line, width: selected ? 2 : 1),
+                boxShadow: lift,
               ),
-              child: Icon(c.trade.icon, size: 20, color: c.available || selected ? C.ink : C.inkSoft),
+              child: Icon(c.trade.icon, size: 20, color: selected ? C.onFill : (c.available ? C.volt : C.inkSoft)),
             ),
-            Container(width: 2, height: 8, color: C.ink),
+            Container(width: 2, height: 8, color: selected ? C.volt : C.lineStrong),
           ],
         ),
       ),
@@ -427,7 +427,7 @@ class _MeDot extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF2563EB),
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 4),
+        border: Border.all(color: C.onFill, width: 4),
         boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 6)],
       ),
     );
@@ -474,11 +474,11 @@ class _FilterSheetState extends State<_FilterSheet> {
               Expanded(child: Text('Filters', style: display(size: 22))),
               Pressable(
                 onTap: () => setState(() => f = const ExploreFilter()),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.all(6),
                   child: Text(
                     'Reset',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: C.rust),
+                    style: TextStyle(fontWeight: FontWeight.w700, color: C.hotText),
                   ),
                 ),
               ),
@@ -496,7 +496,7 @@ class _FilterSheetState extends State<_FilterSheet> {
             children: [
               _label('Radius'),
               const Spacer(),
-              Text('${f.radiusKm.round()} km', style: mono(size: 13, weight: FontWeight.w700)),
+              Text('${f.radiusKm.round()} km', style: figs(size: 13, weight: FontWeight.w700)),
             ],
           ),
           Slider(
@@ -545,7 +545,7 @@ class _FilterSheetState extends State<_FilterSheet> {
     padding: const EdgeInsets.only(bottom: 8),
     child: Text(
       t.toUpperCase(),
-      style: mono(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+      style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
     ),
   );
 
@@ -556,13 +556,13 @@ class _FilterSheetState extends State<_FilterSheet> {
       duration: M.fast,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
       decoration: BoxDecoration(
-        color: sel ? C.ink : C.paper,
+        color: sel ? C.volt : C.bg,
         borderRadius: BorderRadius.circular(R.pill),
-        border: Border.all(color: sel ? C.ink : C.line, width: 1.5),
+        border: Border.all(color: sel ? C.volt : C.line),
       ),
       child: Text(
         label,
-        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: sel ? C.paper : C.ink),
+        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: sel ? C.onFill : C.ink),
       ),
     ),
   );
@@ -581,4 +581,5 @@ class _FilterSheetState extends State<_FilterSheet> {
 }
 
 /// Desaturate to ~25% and lift toward the paper tone (#F4EEE3).
-const _paperTint = <double>[0.62, 0.30, 0.05, 0, 22, 0.17, 0.72, 0.05, 0, 18, 0.17, 0.30, 0.48, 0, 14, 0, 0, 0, 1, 0];
+const _dayTint = <double>[0.2, 0.55, 0.1, 0, 30, 0.2, 0.55, 0.1, 0, 30, 0.2, 0.55, 0.1, 0, 24, 0, 0, 0, 1, 0];
+const _nightTint = <double>[-0.096, -0.188, -0.036, 0, 88, -0.096, -0.188, -0.036, 0, 90, -0.096, -0.188, -0.036, 0, 96, 0, 0, 0, 1, 0];
