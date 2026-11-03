@@ -30,9 +30,18 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
   final _title = TextEditingController();
   final _desc = TextEditingController();
   final List<String> _photos = [];
-  Urgency _urgency = Urgency.today;
+  bool _instant = true;
+  late final List<List<Slot>> _days = slotsAhead();
+  int _day = 0;
+  Slot? _slot;
+  Diagnosis? _dx;
+  String? _scanning; // photo being read by the mock model
   bool _sending = false;
   bool _forward = true;
+
+  /// Instant is "right now"; a slot today is "today"; later is "this week".
+  Urgency get _urgency => _instant ? Urgency.now : (_slot != null && dayLabel(_slot!.day) != 'Today' ? Urgency.week : Urgency.today);
+  PriceEstimate get _estimate => estimateFor(_trade!, instant: _instant, dx: _dx);
 
   static const _stepNames = ['Trade', 'Problem', 'When', 'Review'];
   static const _gallery = ['plumb-1', 'plumb-2', 'elec-1', 'mech-1', 'wood-1', 'metal-2'];
@@ -42,6 +51,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
   bool get _canNext => switch (_step) {
     0 => _trade != null,
     1 => _title.text.trim().length >= 4,
+    2 => _instant || _slot != null,
     _ => true,
   };
 
@@ -62,6 +72,9 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
       urgency: _urgency,
       photos: List.of(_photos),
       direct: widget.direct,
+      slot: _instant ? null : _slot,
+      estimate: _estimate,
+      diagnosis: _dx,
     );
     if (!mounted) return;
     HapticFeedback.heavyImpact();
@@ -303,7 +316,13 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                         right: -6,
                         child: Pressable(
                           semanticLabel: 'Remove photo',
-                          onTap: () => setState(() => _photos.remove(p)),
+                          onTap: () => setState(() {
+                            _photos.remove(p);
+                            if (_photos.isEmpty) {
+                              _dx = null;
+                              _scanning = null;
+                            }
+                          }),
                           child: Container(
                             width: 24,
                             height: 24,
@@ -344,8 +363,155 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
             ],
           ),
         ),
+        const SizedBox(height: S.lg),
+        _aiCard(),
       ],
     );
+  }
+
+  /// Fixy AI: reads the first photo and suggests what's wrong, a title,
+  /// a time and parts. Prototype: canned answers per sample photo.
+  Widget _aiCard() {
+    if (_scanning == null && _dx == null) {
+      return Row(
+        children: [
+          Icon(PhosphorIconsBold.sparkle, size: 16, color: C.volt),
+          const SizedBox(width: 8),
+          Expanded(child: Text('Add a photo and Fixy AI will guess the problem and the parts.', style: Theme.of(context).textTheme.bodySmall)),
+        ],
+      );
+    }
+    if (_scanning != null) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: C.card,
+          borderRadius: BorderRadius.circular(R.md),
+          border: Border.all(color: C.volt),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 64,
+              height: 64,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(R.sm),
+                child: Stack(
+                  children: [
+                    Positioned.fill(child: Photo(_scanning!, radius: 0)),
+                    if (!reduceMotion(context))
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: Container(height: 3, color: C.volt),
+                      ).animate(onPlay: (c) => c.repeat(reverse: true)).moveY(begin: 0, end: 61, duration: 900.ms, curve: Curves.easeInOut),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(PhosphorIconsBold.scan, size: 14, color: C.volt),
+                      const SizedBox(width: 6),
+                      Text(
+                        'FIXY AI · READING PHOTO',
+                        style: figs(size: 10.5, weight: FontWeight.w700, color: C.volt),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Skeleton(height: 12),
+                  const SizedBox(height: 6),
+                  const Skeleton(width: 120, height: 12),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    final dx = _dx!;
+    final applied = _title.text.trim() == dx.title;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: C.card,
+        borderRadius: BorderRadius.circular(R.md),
+        border: Border.all(color: C.lineStrong),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(PhosphorIconsFill.sparkle, size: 14, color: C.volt),
+              const SizedBox(width: 6),
+              Text(
+                'FIXY AI THINKS',
+                style: figs(size: 10.5, weight: FontWeight.w700, color: C.volt),
+              ),
+              const Spacer(),
+              Text(
+                '${(dx.confidence * 100).round()}% SURE',
+                style: figs(size: 10.5, weight: FontWeight.w700, color: C.inkSoft),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(dx.issue, style: display(size: 20)),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(PhosphorIconsBold.timer, size: 14, color: C.inkSoft),
+              const SizedBox(width: 4),
+              Text('~${dx.minutes} MIN', style: figs(size: 11, color: C.inkSoft)),
+              const SizedBox(width: 14),
+              Icon(PhosphorIconsBold.wrench, size: 14, color: C.inkSoft),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  dx.parts.toUpperCase(),
+                  overflow: TextOverflow.ellipsis,
+                  style: figs(size: 11, color: C.inkSoft),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TagButton.light(
+            compact: true,
+            label: applied ? 'Title set' : 'Use "${dx.title}" as title',
+            icon: applied ? PhosphorIconsBold.check : null,
+            onTap: applied
+                ? null
+                : () => setState(() {
+                    _title.text = dx.title;
+                    if (_desc.text.isEmpty) _desc.text = 'Photo suggests: ${dx.issue.toLowerCase()}.';
+                  }),
+          ),
+          const SizedBox(height: 6),
+          Text('A guess, not a diagnosis. The m\'lem confirms on site.', style: figs(size: 10.5, color: C.inkSoft)),
+        ],
+      ),
+    ).animate().fadeIn(duration: 220.ms).moveY(begin: 8, end: 0, curve: M.out);
+  }
+
+  Future<void> _analyze(String photo) async {
+    setState(() {
+      _scanning = photo;
+      _dx = null;
+    });
+    final dx = await context.read<AppState>().analyzePhoto(photo, _trade);
+    if (!mounted || _scanning != photo) return;
+    HapticFeedback.lightImpact();
+    setState(() {
+      _scanning = null;
+      _dx = dx;
+    });
   }
 
   void _pickPhoto() {
@@ -372,7 +538,11 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                 for (final p in _gallery)
                   Pressable(
                     onTap: () {
-                      if (!_photos.contains(p)) setState(() => _photos.add(p));
+                      if (!_photos.contains(p)) {
+                        setState(() => _photos.add(p));
+                        // Read the first photo only; that's the one m'lems see first.
+                        if (_photos.length == 1) _analyze(p);
+                      }
                       Navigator.pop(ctx);
                     },
                     child: Photo(p, radius: R.sm),
@@ -396,56 +566,76 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
   };
 
   Widget _whenStep() {
+    final addr = context.watch<AppState>().address;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _h('How urgent\nis it?'),
-        for (final (i, u) in Urgency.values.indexed)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Pressable(
-              scale: 0.98,
-              onTap: () => setState(() => _urgency = u),
-              child: AnimatedContainer(
-                duration: M.fast,
-                curve: M.out,
-                padding: const EdgeInsets.all(S.lg),
-                decoration: BoxDecoration(
-                  color: _urgency == u ? (u == Urgency.now ? C.hot : C.card) : C.bg,
-                  borderRadius: BorderRadius.circular(R.lg - 4),
-                  border: Border.all(color: _urgency == u ? (u == Urgency.now ? C.hot : C.volt) : C.line, width: _urgency == u ? 1.5 : 1),
-                  boxShadow: _urgency == u ? lift : null,
+        _h('When do you\nneed it?'),
+        // Instant vs Scheduled: one segmented control, the slab slides.
+        Container(
+          height: 56,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: C.card,
+            borderRadius: BorderRadius.circular(R.md),
+            border: Border.all(color: C.line),
+          ),
+          child: LayoutBuilder(
+            builder: (context, box) => Stack(
+              children: [
+                AnimatedPositioned(
+                  duration: M.base,
+                  curve: M.out,
+                  left: _instant ? 0 : box.maxWidth / 2,
+                  width: box.maxWidth / 2,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(
+                    decoration: BoxDecoration(color: _instant ? C.hot : C.volt, borderRadius: BorderRadius.circular(R.sm)),
+                  ),
                 ),
-                child: Row(
+                Row(
                   children: [
-                    Icon(switch (u) {
-                      Urgency.now => PhosphorIconsBold.siren,
-                      Urgency.today => PhosphorIconsBold.clock,
-                      Urgency.week => PhosphorIconsBold.calendarBlank,
-                    }, size: 24, color: _urgency == u && u == Urgency.now ? C.onFill : C.volt),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            u.label,
-                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: _urgency == u && u == Urgency.now ? C.onFill : C.ink),
+                    for (final instant in [true, false])
+                      Expanded(
+                        child: Semantics(
+                          selected: _instant == instant,
+                          button: true,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _instant = instant);
+                            },
+                            child: Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    instant ? PhosphorIconsBold.lightning : PhosphorIconsBold.calendarBlank,
+                                    size: 18,
+                                    color: _instant == instant ? C.onFill : C.ink,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    instant ? 'INSTANT' : 'SCHEDULED',
+                                    style: display(size: 18, weight: FontWeight.w700, color: _instant == instant ? C.onFill : C.ink),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          Text(
-                            u.hint,
-                            style: TextStyle(fontSize: 13, color: _urgency == u && u == Urgency.now ? C.onFillSoft : C.inkSoft),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    AnimatedScale(scale: _urgency == u ? 1 : 0, duration: M.fast, curve: M.spring, child: Icon(PhosphorIconsFill.checkCircle, color: u == Urgency.now ? C.onFill : C.volt)),
                   ],
                 ),
-              ),
+              ],
             ),
-          ).enter(context, i),
+          ),
+        ),
         const SizedBox(height: S.lg),
+        AnimatedSize(duration: M.base, curve: M.out, alignment: Alignment.topCenter, child: _instant ? _instantInfo() : _slotPicker()),
+        const SizedBox(height: S.xl),
         Text(
           'WHERE',
           style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
@@ -465,14 +655,10 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Home · Cité 1200 Logements', style: TextStyle(fontWeight: FontWeight.w700)),
-                    Text('Kouba, Alger 16050', style: TextStyle(fontSize: 13, color: C.inkSoft)),
+                    Text('${addr.label} · ${addr.line}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text('${addr.commune}, Alger', style: TextStyle(fontSize: 13, color: C.inkSoft)),
                   ],
                 ),
-              ),
-              Text(
-                'Change',
-                style: TextStyle(fontWeight: FontWeight.w700, color: C.hotText.withValues(alpha: 1)),
               ),
             ],
           ),
@@ -480,6 +666,131 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
       ],
     );
   }
+
+  Widget _instantInfo() {
+    final near = craftsmen.where((c) => c.trade == _trade && c.available).toList();
+    final fastest = near.isEmpty ? 25 : near.map((c) => c.responseMins).reduce((a, b) => a < b ? a : b) + 10;
+    return Container(
+      key: const ValueKey('instant'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(S.lg),
+      decoration: BoxDecoration(color: C.hotWash, borderRadius: BorderRadius.circular(R.md)),
+      child: Row(
+        children: [
+          Icon(PhosphorIconsBold.siren, color: C.hotText),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${near.length} free now · first one in ~$fastest min',
+                  style: TextStyle(fontWeight: FontWeight.w700, color: C.hotText),
+                ),
+                const SizedBox(height: 2),
+                Text('For leaks, outages, anything that can\'t wait. Adds an 800 DA priority fee.', style: TextStyle(fontSize: 13, color: C.inkSoft)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _slotPicker() {
+    final slots = _days[_day];
+    return Column(
+      key: const ValueKey('slots'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 64,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _days.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (_, i) {
+              final d = _days[i].first.day;
+              final on = i == _day;
+              final free = _days[i].where((x) => !x.taken).length;
+              return Pressable(
+                semanticLabel: '${dayLabel(d)}, $free free slots',
+                onTap: () => setState(() {
+                  _day = i;
+                  if (_slot != null && _slot!.day != d) _slot = null;
+                }),
+                child: AnimatedContainer(
+                  duration: M.fast,
+                  width: 64,
+                  decoration: BoxDecoration(
+                    color: on ? C.ink : C.card,
+                    borderRadius: BorderRadius.circular(R.md),
+                    border: Border.all(color: on ? C.ink : C.line),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        i == 0 ? 'TODAY' : weekday(d).toUpperCase(),
+                        style: figs(size: 10, weight: FontWeight.w700, color: on ? C.bg : C.inkSoft),
+                      ),
+                      Text(
+                        '${d.day}',
+                        style: display(size: 24, weight: FontWeight.w800, color: on ? C.bg : C.ink).copyWith(height: 1.05),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: S.md),
+        if (slots.every((x) => x.taken))
+          Text('Fully booked. Try another day.', style: Theme.of(context).textTheme.bodySmall)
+        else
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 2.1,
+            children: [
+              for (final x in slots)
+                Pressable(
+                  semanticLabel: x.taken ? '${x.hours}, taken' : x.hours,
+                  onTap: x.taken
+                      ? null
+                      : () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _slot = x);
+                        },
+                  child: AnimatedContainer(
+                    duration: M.fast,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: _slot == x ? C.volt : (x.taken ? C.bg : C.card),
+                      borderRadius: BorderRadius.circular(R.sm),
+                      border: Border.all(color: _slot == x ? C.volt : C.line),
+                    ),
+                    child: Text(
+                      '${x.start.toString().padLeft(2, '0')}–${x.end.toString().padLeft(2, '0')}',
+                      style: figs(
+                        size: 13,
+                        weight: FontWeight.w700,
+                        color: _slot == x ? C.onFill : (x.taken ? C.inkSoft.withValues(alpha: .5) : C.ink),
+                      ).copyWith(decoration: x.taken ? TextDecoration.lineThrough : null),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _priceCard() => PriceBreakdown(estimate: _estimate);
 
   Widget _reviewStep() {
     final reach = craftsmen.where((c) => c.trade == _trade && c.verified && kmFrom(clientHome, c.location) <= 10).length;
@@ -517,7 +828,13 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                   const SizedBox(width: 8),
                   Text(_trade!.label.toUpperCase(), style: figs(size: 12, weight: FontWeight.w700)),
                   const Spacer(),
-                  UrgencyChip(_urgency),
+                  _instant
+                      ? UrgencyChip(_urgency)
+                      : Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(color: C.voltWash, borderRadius: BorderRadius.circular(R.sm)),
+                          child: Text('SCHEDULED', style: figs(size: 10.5, weight: FontWeight.w700, color: C.volt)),
+                        ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -536,11 +853,14 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                 ),
               ],
               Divider(height: 28, color: C.line),
-              row('Where', 'Kouba, Alger'),
+              row('Where', '${context.read<AppState>().address.label} · ${context.read<AppState>().address.commune}'),
+              row('When', _instant ? 'Instant · first m\'lem free' : '${dayLabel(_slot!.day)} · ${_slot!.hours}'),
               row('Sent to', widget.direct?.name ?? "$reach $who within 10 km"),
             ],
           ),
         ),
+        const SizedBox(height: S.lg),
+        _priceCard(),
         const SizedBox(height: S.lg),
         Row(
           children: [
@@ -550,6 +870,93 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Upfront price breakdown, shown before anything is sent.
+class PriceBreakdown extends StatelessWidget {
+  const PriceBreakdown({super.key, required this.estimate, this.locked});
+  final PriceEstimate estimate;
+  final int? locked; // the accepted quote, once there is one
+  @override
+  Widget build(BuildContext context) {
+    String money(PriceLine l) => l.isRange ? '${dzd(l.low).replaceAll(' DA', '')}–${dzd(l.high)}' : dzd(l.low);
+    return TagCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(PhosphorIconsBold.receipt, size: 16, color: C.volt),
+              const SizedBox(width: 8),
+              Text(
+                'UPFRONT ESTIMATE',
+                style: figs(size: 11, weight: FontWeight.w700, color: C.volt),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          for (final l in estimate.lines)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l.label, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        if (l.note != null) Text(l.note!, style: figs(size: 10.5, color: C.inkSoft)),
+                      ],
+                    ),
+                  ),
+                  Text(money(l), style: figs(size: 13, weight: FontWeight.w700)),
+                ],
+              ),
+            ),
+          Divider(height: 20, color: C.lineStrong),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  locked != null ? 'ESTIMATE WAS' : 'YOU PAY',
+                  style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+                ),
+              ),
+              Text(
+                '${dzd(estimate.low).replaceAll(' DA', '')}–${dzd(estimate.high)}',
+                style: display(size: 26, weight: FontWeight.w800, color: locked != null ? C.inkSoft : C.ink),
+              ),
+            ],
+          ),
+          if (locked != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'LOCKED PRICE',
+                    style: figs(size: 11, weight: FontWeight.w700, color: C.teal),
+                  ),
+                ),
+                Text(
+                  dzd(locked!),
+                  style: display(size: 26, weight: FontWeight.w800, color: C.teal),
+                ),
+              ],
+            ),
+          ] else ...[
+            const SizedBox(height: 6),
+            Text(
+              'Quotes land inside this range. The quote you accept is the final price, paid cash after the job.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -603,11 +1010,7 @@ class _Posted extends StatelessWidget {
           Container(
             width: 64,
             height: 64,
-            decoration: BoxDecoration(
-              color: C.volt,
-              shape: BoxShape.circle,
-              boxShadow: lift,
-            ),
+            decoration: BoxDecoration(color: C.volt, shape: BoxShape.circle, boxShadow: lift),
             child: Icon(job.trade.icon, size: 28, color: C.onFill),
           ),
         ],

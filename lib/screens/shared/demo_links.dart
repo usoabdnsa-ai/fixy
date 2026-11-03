@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../widgets/kit.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../data/mock.dart';
@@ -15,6 +17,8 @@ import '../client/post_request.dart';
 import '../client/rate.dart';
 import '../craftsman/pro_shell.dart';
 import 'auth.dart';
+import 'track.dart';
+import '../craftsman/earnings.dart';
 
 /// Web demo shortcut: `?go=<screen>` jumps straight to a screen after the
 /// splash, e.g. `?go=profile` or `?go=pro`. Used for presenting and for
@@ -52,6 +56,16 @@ bool openDeepLink(BuildContext context) {
       root(Role.client, const ClientShell(tab: 2), JobDetailScreen(job: job(JobStatus.quoted)));
     case 'tracking':
       root(Role.client, const ClientShell(tab: 2), JobDetailScreen(job: job(JobStatus.accepted)));
+    case 'live':
+      root(Role.client, const ClientShell(), TrackScreen(job: job(JobStatus.accepted)));
+    case 'navigate':
+      s.signIn(Role.craftsman, '0555123456');
+      nav.pushAndRemoveUntil(fadeRoute(const ProShell(tab: 2)), (_) => false);
+      final pj = s.proJobs.firstWhere((j) => j.status == JobStatus.accepted);
+      s.startNavigation(pj);
+      nav.push(wipeRoute(TrackScreen(job: pj, asPro: true)));
+    case 'wallet':
+      root(Role.craftsman, const ProShell(), const EarningsScreen());
     case 'chat':
       root(Role.client, const ClientShell(), ChatScreen(job: job(JobStatus.accepted)));
     case 'rate':

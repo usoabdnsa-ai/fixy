@@ -15,6 +15,8 @@ import '../../widgets/kit.dart';
 import 'chat.dart';
 import 'rate.dart';
 import 'widgets.dart';
+import 'post_request.dart' show PriceBreakdown;
+import '../shared/track.dart';
 
 class JobDetailScreen extends StatelessWidget {
   const JobDetailScreen({super.key, required this.job});
@@ -33,45 +35,56 @@ class JobDetailScreen extends StatelessWidget {
         children: [
           // Night header: mono id line, giant condensed title, volt rule, hairline.
           DecoratedBox(
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: C.line))),
-            child: Padding(
-            padding: EdgeInsets.fromLTRB(S.gutter, pad.top + 8, S.gutter, S.xl),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    IconCircle(icon: PhosphorIconsBold.arrowLeft, label: 'Back', onTap: () => Navigator.pop(context)),
-                    const Spacer(),
-                    Text(job.id, style: figs(size: 12, color: C.inkSoft)),
-                    const SizedBox(width: 10),
-                    StatusChip(job.status),
-                  ],
-                ),
-                const SizedBox(height: S.xl),
-                Row(
-                  children: [
-                    Icon(job.trade.icon, size: 18, color: C.volt),
-                    const SizedBox(width: 6),
-                    Text(
-                      job.trade.label.toUpperCase(),
-                      style: figs(size: 12, weight: FontWeight.w700, color: C.volt),
-                    ),
-                    const SizedBox(width: 10),
-                    UrgencyChip(job.urgency),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Headline(job.title, style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02)),
-                const SizedBox(height: 12),
-                const VoltRule(),
-                if (job.description.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(job.description, style: TextStyle(color: C.inkSoft, fontSize: 15, height: 1.45)),
-                ],
-              ],
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: C.line)),
             ),
-          ),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(S.gutter, pad.top + 8, S.gutter, S.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      IconCircle(icon: PhosphorIconsBold.arrowLeft, label: 'Back', onTap: () => Navigator.pop(context)),
+                      const Spacer(),
+                      Text(job.id, style: figs(size: 12, color: C.inkSoft)),
+                      const SizedBox(width: 10),
+                      StatusChip(job.status),
+                    ],
+                  ),
+                  const SizedBox(height: S.xl),
+                  Row(
+                    children: [
+                      Icon(job.trade.icon, size: 18, color: C.volt),
+                      const SizedBox(width: 6),
+                      Text(
+                        job.trade.label.toUpperCase(),
+                        style: figs(size: 12, weight: FontWeight.w700, color: C.volt),
+                      ),
+                      const SizedBox(width: 10),
+                      if (job.slot == null) UrgencyChip(job.urgency),
+                      if (job.slot != null) ...[
+                        Flexible(
+                          child: Text(
+                            '${dayLabel(job.slot!.day).toUpperCase()} · ${job.slot!.hours}',
+                            overflow: TextOverflow.ellipsis,
+                            style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Headline(job.title, style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02)),
+                  const SizedBox(height: 12),
+                  const VoltRule(),
+                  if (job.description.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(job.description, style: TextStyle(color: C.inkSoft, fontSize: 15, height: 1.45)),
+                  ],
+                ],
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: S.gutter),
@@ -105,7 +118,12 @@ class JobDetailScreen extends StatelessWidget {
                       child: _QuoteCard(job: job, q: q, best: i == 0).enter(context, i),
                     ),
                 ],
+                if (job.status == JobStatus.accepted && job.trip != null) ...[_LiveMapCard(job: job), const SizedBox(height: S.md)],
                 if (chatOpen) _AssignedCard(job: job),
+                if (job.estimate != null && job.status != JobStatus.cancelled) ...[
+                  const SizedBox(height: S.lg),
+                  PriceBreakdown(estimate: job.estimate!, locked: job.price),
+                ],
                 if (job.status == JobStatus.completed) ...[
                   const SizedBox(height: S.lg),
                   job.rated
@@ -219,6 +237,60 @@ class JobDetailScreen extends StatelessWidget {
               ),
             )
           : null,
+    );
+  }
+}
+
+/// Mini live map; tap for the full tracking screen.
+class _LiveMapCard extends StatelessWidget {
+  const _LiveMapCard({required this.job});
+  final Job job;
+  @override
+  Widget build(BuildContext context) {
+    final t = job.trip!;
+    return Pressable(
+      scale: 0.98,
+      semanticLabel: 'Open live map',
+      onTap: () => Navigator.of(context).push(wipeRoute(TrackScreen(job: job))),
+      child: Container(
+        height: 190,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(R.md),
+          border: Border.all(color: C.volt, width: 1.5),
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(child: RouteMap(trip: t, interactive: false)),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                color: C.bg.withValues(alpha: .92),
+                child: Row(
+                  children: [
+                    LiveDot(color: t.arrived ? C.teal : null),
+                    const SizedBox(width: 8),
+                    Text(
+                      t.arrived ? '${job.craftsman!.firstName.toUpperCase()} IS HERE' : '${job.craftsman!.firstName.toUpperCase()} · ${etaMins(t)} MIN AWAY',
+                      style: figs(size: 12, weight: FontWeight.w700, color: t.arrived ? C.teal : C.ink),
+                    ),
+                    const Spacer(),
+                    Text(
+                      'LIVE MAP →',
+                      style: figs(size: 11, weight: FontWeight.w700, color: C.volt),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

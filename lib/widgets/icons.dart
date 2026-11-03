@@ -60,6 +60,17 @@ abstract final class PhosphorIconsBold {
   static const user = IconData(0xe4c2, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const warning = IconData(0xe4e0, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const x = IconData(0xe4f6, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const sparkle = IconData(0xe6a2, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const wallet = IconData(0xe68a, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const arrowsLeftRight = IconData(0xe0a0, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const receipt = IconData(0xe3ec, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const scan = IconData(0xebb6, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const timer = IconData(0xe492, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const userSwitch = IconData(0xe756, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const path = IconData(0xe39c, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const arrowUpRight = IconData(0xe092, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const briefcase = IconData(0xe0ee, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const wrench = IconData(0xe5d4, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
 }
 
 abstract final class PhosphorIconsFill {
@@ -82,4 +93,6 @@ abstract final class PhosphorIconsFill {
   static const star = IconData(0xe46a, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const tray = IconData(0xe4aa, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const user = IconData(0xe4c2, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const sparkle = IconData(0xe6a2, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const wallet = IconData(0xe68a, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
 }

@@ -12,6 +12,7 @@ import '../../state/app_state.dart';
 import '../../theme/theme.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/kit.dart';
+import 'earnings.dart';
 import 'pro_board.dart';
 import 'pro_shell.dart';
 
@@ -36,7 +37,7 @@ class ProHome extends StatelessWidget {
             const SizedBox(height: S.md),
             Row(
               children: [
-                _Kpi(label: 'This week', value: dzd(s.earningsWeek), accent: true),
+                _Kpi(label: 'This week', value: dzd(s.earningsWeek), accent: true, onTap: () => Navigator.of(context).push(wipeRoute(const EarningsScreen()))),
                 const SizedBox(width: 10),
                 _Kpi(label: 'Rating', value: me.rating.toStringAsFixed(1)),
                 const SizedBox(width: 10),
@@ -44,7 +45,12 @@ class ProHome extends StatelessWidget {
               ],
             ).enter(context, 1),
             const SizedBox(height: S.md),
-            const _EarningsChart().enter(context, 2),
+            Pressable(
+              scale: 0.98,
+              semanticLabel: 'Open wallet',
+              onTap: () => Navigator.of(context).push(wipeRoute(const EarningsScreen())),
+              child: const EarningsChart(),
+            ).enter(context, 2),
             const SizedBox(height: S.xl),
             Row(
               children: [
@@ -66,13 +72,13 @@ class ProHome extends StatelessWidget {
                         Container(
                           width: 52,
                           padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: i == 0 ? C.volt : C.voltWash,
-                            borderRadius: BorderRadius.circular(R.sm),
-                          ),
+                          decoration: BoxDecoration(color: i == 0 ? C.volt : C.voltWash, borderRadius: BorderRadius.circular(R.sm)),
                           child: Column(
                             children: [
-                              Text(i == 0 ? '11:00' : '15:30', style: figs(size: 13, weight: FontWeight.w700, color: i == 0 ? C.onFill : C.volt)),
+                              Text(
+                                i == 0 ? '11:00' : '15:30',
+                                style: figs(size: 13, weight: FontWeight.w700, color: i == 0 ? C.onFill : C.volt),
+                              ),
                               Text('today', style: figs(size: 9.5, color: i == 0 ? C.onFillSoft : C.volt)),
                             ],
                           ),
@@ -203,42 +209,50 @@ class _OnlineCard extends StatelessWidget {
 }
 
 class _Kpi extends StatelessWidget {
-  const _Kpi({required this.label, required this.value, this.accent = false});
+  const _Kpi({required this.label, required this.value, this.accent = false, this.onTap});
   final String label;
   final String value;
   final bool accent;
+  final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) {
     return Expanded(
       flex: accent ? 2 : 1,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: accent ? C.volt : C.card,
-          borderRadius: BorderRadius.circular(R.md),
-          border: Border.all(color: accent ? C.volt : C.line),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label.toUpperCase(),
-              style: figs(size: 10, weight: FontWeight.w700, color: accent ? C.onFillSoft : C.inkSoft),
-            ),
-            const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(value, style: figs(size: 18, weight: FontWeight.w700, color: accent ? C.onFill : C.ink)),
-            ),
-          ],
+      child: Pressable(
+        onTap: onTap,
+        semanticLabel: onTap == null ? null : 'Open wallet',
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: accent ? C.volt : C.card,
+            borderRadius: BorderRadius.circular(R.md),
+            border: Border.all(color: accent ? C.volt : C.line),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: figs(size: 10, weight: FontWeight.w700, color: accent ? C.onFillSoft : C.inkSoft),
+              ),
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  value,
+                  style: figs(size: 18, weight: FontWeight.w700, color: accent ? C.onFill : C.ink),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _EarningsChart extends StatelessWidget {
-  const _EarningsChart();
+class EarningsChart extends StatelessWidget {
+  const EarningsChart({super.key});
   static const _days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   static const _vals = [3500, 6000, 2000, 4500, 2500, 0, 0];
   @override
@@ -252,7 +266,7 @@ class _EarningsChart extends StatelessWidget {
             children: [
               const Text('Earnings', style: TextStyle(fontWeight: FontWeight.w700)),
               const Spacer(),
-              Text('SUN 11 – SAT 17', style: figs(size: 10.5, color: C.inkSoft)),
+              Text('THIS WEEK  →', style: figs(size: 10.5, color: C.inkSoft)),
             ],
           ),
           const SizedBox(height: 14),
@@ -280,10 +294,7 @@ class _EarningsChart extends StatelessWidget {
                             curve: M.out,
                             builder: (_, t, _) => Container(
                               height: (_vals[i] == 0 ? 4 : 60 * _vals[i] / max) * t + 2,
-                              decoration: BoxDecoration(
-                                color: i == 4 ? C.hot : (i > 4 ? C.line : C.volt),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
+                              decoration: BoxDecoration(color: i == 4 ? C.hot : (i > 4 ? C.line : C.volt), borderRadius: BorderRadius.circular(4)),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -345,7 +356,10 @@ class _IncomingAlertState extends State<_IncomingAlert> with SingleTickerProvide
             children: [
               Icon(PhosphorIconsBold.siren, size: 16, color: C.onFill),
               const SizedBox(width: 6),
-              Text('URGENT · ${km(d)} AWAY', style: figs(size: 11.5, weight: FontWeight.w700, color: C.onFill)),
+              Text(
+                'URGENT · ${km(d)} AWAY',
+                style: figs(size: 11.5, weight: FontWeight.w700, color: C.onFill),
+              ),
               const Spacer(),
               SizedBox(
                 width: 30,
@@ -356,7 +370,10 @@ class _IncomingAlertState extends State<_IncomingAlert> with SingleTickerProvide
                     alignment: Alignment.center,
                     children: [
                       CircularProgressIndicator(value: 1 - _ring.value, strokeWidth: 3, color: C.onFill, backgroundColor: Colors.white.withValues(alpha: .25)),
-                      Text('${(60 * (1 - _ring.value)).ceil()}', style: figs(size: 10, weight: FontWeight.w700, color: C.onFill)),
+                      Text(
+                        '${(60 * (1 - _ring.value)).ceil()}',
+                        style: figs(size: 10, weight: FontWeight.w700, color: C.onFill),
+                      ),
                     ],
                   ),
                 ),
@@ -366,7 +383,10 @@ class _IncomingAlertState extends State<_IncomingAlert> with SingleTickerProvide
           const SizedBox(height: 8),
           Text(j.title, style: display(size: 20, color: C.onFill)),
           const SizedBox(height: 4),
-          Text('${j.clientName} · ${j.commune} · ${j.budgetHint ?? ''}', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: C.onFillSoft)),
+          Text(
+            '${j.clientName} · ${j.commune} · ${j.budgetHint ?? ''}',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: C.onFillSoft),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [

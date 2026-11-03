@@ -415,7 +415,178 @@ const requestsPerDay = [38, 41, 35, 52, 61, 47, 44, 58, 66, 71, 63, 59, 74, 82];
 const completedPerDay = [30, 35, 29, 44, 50, 41, 39, 49, 57, 60, 55, 52, 63, 70];
 const tradeShare = {Trade.plumbing: 34, Trade.electrical: 22, Trade.hvac: 18, Trade.mechanic: 12, Trade.carpentry: 8, Trade.painting: 6};
 
+// ---------- booking wizard ----------
+
+const addresses = [
+  Address('Home', 'Cité 1200 Logements, Bt 14', 'Kouba', clientHome),
+  Address('Parents', 'Rue Hassiba Ben Bouali', 'Hussein Dey', LatLng(36.7420, 3.0990)),
+  Address('Office', 'Lot. Said Hamdine', 'Bir Mourad Raïs', LatLng(36.7390, 3.0450)),
+];
+
+const _monthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const _dayShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+String dayLabel(DateTime d) {
+  final today = DateTime.now();
+  final diff = DateTime(d.year, d.month, d.day).difference(DateTime(today.year, today.month, today.day)).inDays;
+  if (diff == 0) return 'Today';
+  if (diff == 1) return 'Tomorrow';
+  return '${_dayShort[d.weekday - 1]} ${d.day} ${_monthShort[d.month - 1]}';
+}
+
+String weekday(DateTime d) => _dayShort[d.weekday - 1];
+
+/// Next 6 days of 2-hour windows. Friday afternoon is off; a few windows
+/// are already booked so the picker has something to skip.
+List<List<Slot>> slotsAhead() {
+  final now = DateTime.now();
+  final days = <List<Slot>>[];
+  for (var d = 0; d < 6; d++) {
+    final day = DateTime(now.year, now.month, now.day + d);
+    final list = <Slot>[];
+    for (final h in [8, 10, 12, 14, 16, 18]) {
+      if (day.weekday == DateTime.friday && h >= 12) continue;
+      final past = d == 0 && h <= now.hour;
+      final busy = (d * 7 + h) % 5 == 0;
+      list.add(Slot(day: day, start: h, end: h + 2, taken: past || busy));
+    }
+    days.add(list);
+  }
+  return days;
+}
+
+/// Mock vision model: a canned read per sample photo.
+Diagnosis diagnose(String photo, Trade? trade) => switch (photo) {
+  'plumb-1' => const Diagnosis(
+    issue: 'Worn compression seal on the supply valve',
+    confidence: .86,
+    minutes: 45,
+    parts: 'Seal kit + PTFE tape',
+    partsCost: 450,
+    title: 'Supply valve dripping',
+  ),
+  'plumb-2' => const Diagnosis(
+    issue: 'Cracked P-trap under the basin',
+    confidence: .78,
+    minutes: 40,
+    parts: 'PVC P-trap 40 mm',
+    partsCost: 700,
+    title: 'Leak under the sink',
+  ),
+  'elec-1' => const Diagnosis(
+    issue: 'Overloaded circuit, breaker undersized',
+    confidence: .71,
+    minutes: 90,
+    parts: '32A breaker + 6 mm² cable',
+    partsCost: 2400,
+    title: 'Breaker keeps tripping',
+  ),
+  'mech-1' => const Diagnosis(
+    issue: 'Battery terminals corroded',
+    confidence: .74,
+    minutes: 30,
+    parts: 'Terminal clamps',
+    partsCost: 600,
+    title: "Car won't start",
+  ),
+  'wood-1' => const Diagnosis(
+    issue: 'Door hinge screws stripped, door sagging',
+    confidence: .82,
+    minutes: 50,
+    parts: '3 hinges + long screws',
+    partsCost: 900,
+    title: "Door won't close",
+  ),
+  _ => Diagnosis(
+    issue: 'Rust on the fitting, likely a slow leak',
+    confidence: .63,
+    minutes: 60,
+    parts: 'Fitting + sealant',
+    partsCost: 800,
+    title: '${trade?.label ?? 'Repair'} needed',
+  ),
+};
+
+/// Upfront estimate: call-out + labour range + parts + urgent fee + service fee.
+PriceEstimate estimateFor(Trade trade, {required bool instant, Diagnosis? dx}) {
+  final pros = craftsmen.where((c) => c.trade == trade).toList();
+  final callout = pros.isEmpty ? 1000 : (pros.map((c) => c.callout).reduce((a, b) => a + b) / pros.length / 100).round() * 100;
+  final hourly = pros.isEmpty ? 1500 : (pros.map((c) => c.hourly).reduce((a, b) => a + b) / pros.length / 100).round() * 100;
+  final mins = dx?.minutes ?? 60;
+  final labourLow = (hourly * mins / 60 / 100).round() * 100;
+  final labourHigh = (labourLow * 1.6 / 100).round() * 100;
+  return PriceEstimate([
+    PriceLine('Call-out', callout),
+    PriceLine('Labour', labourLow, labourHigh, dx == null ? 'about 1 h' : 'about ${dx.minutes} min'),
+    if (dx != null) PriceLine('Parts', dx.partsCost, (dx.partsCost * 1.3 / 50).round() * 50, dx.parts),
+    if (instant) const PriceLine('Instant fee', 800, 800, 'priority dispatch'),
+    const PriceLine('Fixy service fee', 200),
+  ]);
+}
+
+// ---------- live tracking ----------
+
+/// A street-ish route: steps that alternate north-south and east-west legs
+/// with a small wobble, so it reads as driving rather than a straight line.
+List<LatLng> routeBetween(LatLng from, LatLng to) {
+  const legs = 6;
+  final pts = <LatLng>[from];
+  for (var i = 1; i < legs; i++) {
+    final t = i / legs;
+    final wobble = (i.isEven ? 1 : -1) * 0.0012;
+    final lat = from.latitude + (to.latitude - from.latitude) * t;
+    final lng = from.longitude + (to.longitude - from.longitude) * t;
+    final prev = pts.last;
+    pts.add(i.isOdd ? LatLng(lat + wobble, prev.longitude) : LatLng(prev.latitude, lng + wobble));
+  }
+  pts.add(LatLng(to.latitude, pts.last.longitude));
+  pts.add(to);
+  return pts;
+}
+
+double routeKm(List<LatLng> r) {
+  var d = 0.0;
+  for (var i = 1; i < r.length; i++) {
+    d += kmFrom(r[i - 1], r[i]);
+  }
+  return d;
+}
+
+/// Point at [t] (0..1) along the route, by distance.
+LatLng pointAlong(List<LatLng> r, double t) {
+  final total = routeKm(r);
+  var target = total * t.clamp(0.0, 1.0);
+  for (var i = 1; i < r.length; i++) {
+    final seg = kmFrom(r[i - 1], r[i]);
+    if (target <= seg || i == r.length - 1) {
+      final f = seg == 0 ? 0.0 : (target / seg).clamp(0.0, 1.0);
+      return LatLng(r[i - 1].latitude + (r[i].latitude - r[i - 1].latitude) * f, r[i - 1].longitude + (r[i].longitude - r[i - 1].longitude) * f);
+    }
+    target -= seg;
+  }
+  return r.last;
+}
+
+/// City driving in Alger: ~18 km/h door to door, never under a minute.
+int etaMins(Trip t) {
+  final left = routeKm(t.route) * (1 - t.progress);
+  return t.arrived ? 0 : (left / 18 * 60).ceil().clamp(1, 999);
+}
+
+// ---------- m'lem wallet ----------
+
+const commissionRate = 0.10;
+
+List<Payout> seedPayouts() => const [
+  Payout(label: 'Kitchen tap replaced · Kouba', amount: 3150, daysAgo: 0, jobId: 'FX-2035'),
+  Payout(label: 'Water heater service · Hydra', amount: 4050, daysAgo: 1, jobId: 'FX-2031'),
+  Payout(label: 'Cash out to CCP •• 4471', amount: -12000, daysAgo: 2, cashOut: true),
+  Payout(label: 'Shower mixer install · Hussein Dey', amount: 2700, daysAgo: 3, jobId: 'FX-2024'),
+  Payout(label: 'Leak search · El Biar', amount: 5400, daysAgo: 4, jobId: 'FX-2019'),
+  Payout(label: 'Toilet flush repair · Kouba', amount: 1800, daysAgo: 5, jobId: 'FX-2012'),
+];
+
 String dzd(int amount) {
+  if (amount < 0) return '−${dzd(-amount)}';
   final s = amount.toString();
   final buf = StringBuffer();
   for (var i = 0; i < s.length; i++) {

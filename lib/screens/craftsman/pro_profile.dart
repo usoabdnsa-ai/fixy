@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../data/models.dart';
+import '../shared/mode_switch.dart';
+
 import 'package:flutter/services.dart';
 
 import '../../widgets/icons.dart';
@@ -163,6 +167,8 @@ class _ProProfileState extends State<ProProfile> {
         TagButton(label: 'Save changes', loading: _saving, onTap: _save),
         const SizedBox(height: 10),
         const ThemeSwitch(),
+        const SizedBox(height: S.md),
+        const ModeSwitch(to: Role.client),
         const SizedBox(height: S.md),
         TagButton.light(label: 'Sign out', icon: PhosphorIconsBold.signOut, onTap: () => signOut(context)),
       ],

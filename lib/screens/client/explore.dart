@@ -102,12 +102,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 padding: EdgeInsets.fromLTRB(S.gutter, top + 10, S.gutter, 10),
                 decoration: BoxDecoration(
                   gradient: _map
-                      ? LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [C.bg, C.bg.withValues(alpha: 0)],
-                          stops: const [.6, 1],
-                        )
+                      ? LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [C.bg, C.bg.withValues(alpha: 0)], stops: const [.6, 1])
                       : null,
                   color: _map ? null : C.bg,
                 ),
@@ -205,7 +200,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'dz.fixy.app',
           // Warm, low-contrast paper tint so pins stay the loudest thing on the map.
-          tileBuilder: (context, tile, _) => ColorFiltered(colorFilter: ColorFilter.matrix(C.isLight ? _dayTint : _nightTint), child: tile),
+          tileBuilder: (context, tile, _) => ColorFiltered(colorFilter: ColorFilter.matrix(mapTint), child: tile),
         ),
         CircleLayer(
           circles: [
@@ -581,5 +576,3 @@ class _FilterSheetState extends State<_FilterSheet> {
 }
 
 /// Desaturate to ~25% and lift toward the paper tone (#F4EEE3).
-const _dayTint = <double>[0.2, 0.55, 0.1, 0, 30, 0.2, 0.55, 0.1, 0, 30, 0.2, 0.55, 0.1, 0, 24, 0, 0, 0, 1, 0];
-const _nightTint = <double>[-0.096, -0.188, -0.036, 0, 88, -0.096, -0.188, -0.036, 0, 90, -0.096, -0.188, -0.036, 0, 96, 0, 0, 0, 1, 0];

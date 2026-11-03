@@ -14,6 +14,7 @@ import '../../theme/tokens.dart';
 import '../../widgets/kit.dart';
 import '../client/chat.dart';
 import '../client/widgets.dart';
+import '../shared/track.dart';
 
 /// Craftsman's accepted jobs. Status moves Accepted → In progress → Completed;
 /// "Mark completed" is hold-to-confirm so it can't be tapped by accident.
@@ -114,16 +115,16 @@ class _ProJobCard extends StatelessWidget {
                 },
               ),
               const SizedBox(width: 8),
-              IconCircle(
-                icon: PhosphorIconsBold.navigationArrow,
-                label: 'Directions',
-                bg: C.bg,
-                onTap: () => toast(context, 'Opening directions to ${job.commune} (prototype)'),
-              ),
+              IconCircle(icon: PhosphorIconsBold.navigationArrow, label: 'Directions', bg: C.bg, onTap: () => _navigate(context, job)),
               const SizedBox(width: 10),
               Expanded(
                 child: job.status == JobStatus.accepted
-                    ? TagButton(compact: true, label: "I'm on site", icon: PhosphorIconsBold.mapPin, onTap: () => s.advance(job))
+                    ? TagButton(
+                        compact: true,
+                        label: job.trip?.arrived ?? false ? "I'm on site" : 'Navigate',
+                        icon: PhosphorIconsBold.navigationArrow,
+                        onTap: () => _navigate(context, job),
+                      )
                     : _HoldToConfirm(
                         label: 'Hold to complete',
                         onConfirmed: () {
@@ -222,4 +223,10 @@ class _HoldToConfirmState extends State<_HoldToConfirm> with SingleTickerProvide
       ),
     );
   }
+}
+
+/// Start (or resume) the live route to a booked job.
+void _navigate(BuildContext context, Job job) {
+  context.read<AppState>().startNavigation(job);
+  Navigator.of(context).push(wipeRoute(TrackScreen(job: job, asPro: true)));
 }

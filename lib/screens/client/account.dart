@@ -12,6 +12,8 @@ import '../../theme/tokens.dart';
 import '../../widgets/kit.dart';
 import '../shared/auth.dart';
 import 'widgets.dart';
+import '../../data/models.dart';
+import '../shared/mode_switch.dart';
 
 void signOut(BuildContext context) {
   context.read<AppState>().signOut();
@@ -85,9 +87,11 @@ class _AccountScreenState extends State<AccountScreen> {
             child: CraftsmanTile(c: c),
           ),
         const SizedBox(height: S.lg),
+        const ModeSwitch(to: Role.craftsman),
+        const SizedBox(height: S.lg),
         Text('Settings', style: display(size: 18)),
         const SizedBox(height: 10),
-        _row(PhosphorIconsBold.mapPin, 'Addresses', 'Home · Kouba'),
+        _row(PhosphorIconsBold.mapPin, 'Addresses', '${s.address.label} · ${s.address.commune}'),
         _row(PhosphorIconsBold.bell, 'Notifications', 'Quotes, messages'),
         Container(
           margin: const EdgeInsets.only(bottom: 8),

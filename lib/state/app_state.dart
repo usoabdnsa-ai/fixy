@@ -19,17 +19,86 @@ class AppState extends ChangeNotifier {
   final List<Flag> flags = seedFlags();
   final Set<String> favorites = {'c1'};
 
+  final List<Payout> payouts = seedPayouts();
+  Address address = addresses.first;
+
   bool online = true;
   int radiusKm = 8;
   Job? incoming; // live alert shown on the craftsman home
   Timer? _alertTimer;
+  Timer? _tripTimer;
   int _seq = 2060;
+
+  AppState() {
+    // The seeded accepted job already has Karim on the road.
+    for (final j in clientJobs.where((j) => j.status == JobStatus.accepted && j.craftsman != null)) {
+      j.trip = Trip(route: routeBetween(j.craftsman!.location, j.location), progress: .3);
+    }
+    _ensureTripTimer();
+  }
 
   void signIn(Role r, String phoneNumber) {
     role = r;
     phone = phoneNumber;
     if (r == Role.craftsman) _scheduleAlert();
     notifyListeners();
+  }
+
+  /// Same account, other side of the marketplace. The shells swap; data stays.
+  void switchMode(Role r) {
+    role = r;
+    if (r == Role.craftsman) {
+      _scheduleAlert();
+    } else {
+      _alertTimer?.cancel();
+      incoming = null;
+    }
+    notifyListeners();
+  }
+
+  void setAddress(Address a) {
+    address = a;
+    notifyListeners();
+  }
+
+  // ---------- live trips ----------
+
+  /// One shared clock moves every m'lem that is on the way. A demo trip
+  /// takes about four minutes end to end.
+  void _ensureTripTimer() {
+    _tripTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      var moved = false;
+      for (final j in [...clientJobs, ...proJobs]) {
+        final t = j.trip;
+        if (t == null || t.arrived || j.status != JobStatus.accepted) continue;
+        t.progress = (t.progress + 1 / 240).clamp(0.0, 1.0);
+        moved = true;
+        if (t.arrived && j.craftsman != null) {
+          j.messages.add(Message(fromMe: false, text: '${j.craftsman!.firstName} has arrived at your door.', time: 'now', system: true));
+        }
+      }
+      if (moved) notifyListeners();
+    });
+  }
+
+  /// Demo shortcut on the tracking screen: jump the m'lem forward.
+  void skipAhead(Job job) {
+    final t = job.trip;
+    if (t == null) return;
+    t.progress = (t.progress + .25).clamp(0.0, .999);
+    notifyListeners();
+  }
+
+  /// M'lem side: start turn-by-turn to a booked job.
+  void startNavigation(Job job) {
+    job.trip ??= Trip(route: routeBetween(me.location, job.location));
+    notifyListeners();
+  }
+
+  /// Mock photo model. Slow enough that the scanning state is visible.
+  Future<Diagnosis> analyzePhoto(String photo, Trade? trade) async {
+    await Future.delayed(const Duration(milliseconds: 1800));
+    return diagnose(photo, trade);
   }
 
   void signOut() {
@@ -53,6 +122,9 @@ class AppState extends ChangeNotifier {
     required Urgency urgency,
     required List<String> photos,
     Craftsman? direct,
+    Slot? slot,
+    PriceEstimate? estimate,
+    Diagnosis? diagnosis,
   }) async {
     await Future.delayed(const Duration(milliseconds: 900));
     final job = Job(
@@ -61,13 +133,16 @@ class AppState extends ChangeNotifier {
       description: description,
       trade: trade,
       urgency: urgency,
-      commune: clientCommune,
-      location: clientHome,
-      status: direct != null ? JobStatus.pending : JobStatus.pending,
+      commune: address.commune,
+      location: address.location,
+      status: JobStatus.pending,
       postedMinsAgo: 0,
       clientName: clientName,
       photos: photos,
       craftsman: direct,
+      slot: slot,
+      estimate: estimate,
+      diagnosis: diagnosis,
     );
     clientJobs.insert(0, job);
     notifyListeners();
@@ -75,12 +150,13 @@ class AppState extends ChangeNotifier {
     if (direct == null) {
       Timer(const Duration(seconds: 4), () {
         final pros = craftsmen.where((c) => c.trade == trade && c.available).take(2).toList();
-        for (final p in pros) {
+        for (final (i, p) in pros.indexed) {
           job.quotes.add(
             Quote(
               craftsman: p,
-              amount: p.callout + p.hourly * 2,
-              eta: urgency == Urgency.now ? '${p.responseMins + 10} min' : 'Tomorrow',
+              // Inside the upfront estimate when there is one, so the promise holds.
+              amount: estimate == null ? p.callout + p.hourly * 2 : ((estimate.low + (estimate.high - estimate.low) * (i == 0 ? .3 : .75)) / 50).round() * 50,
+              eta: slot != null ? '${dayLabel(slot.day)} ${slot.start}:00' : '${p.responseMins + 10} min',
               note: 'Can come with parts.',
             ),
           );
@@ -97,6 +173,8 @@ class AppState extends ChangeNotifier {
     job.price = q.amount;
     job.status = JobStatus.accepted;
     job.messages.add(Message(fromMe: false, text: 'Quote accepted. Chat is now open with ${q.craftsman.firstName}.', time: 'now', system: true));
+    // Instant jobs dispatch right away; scheduled ones start the trip on the day.
+    if (job.slot == null) job.trip = Trip(route: routeBetween(q.craftsman.location, job.location));
     notifyListeners();
   }
 
@@ -191,14 +269,32 @@ class AppState extends ChangeNotifier {
       JobStatus.inProgress => JobStatus.completed,
       _ => job.status,
     };
+    if (job.status == JobStatus.inProgress) job.trip?.progress = 1;
     // Keep the client's copy in sync for the demo.
     for (final j in clientJobs.where((j) => j.id == job.id)) {
       j.status = job.status;
+      if (j.status == JobStatus.inProgress) j.trip?.progress = 1;
+    }
+    // A finished pro job lands in the wallet, net of commission.
+    if (job.status == JobStatus.completed && proJobs.contains(job) && job.price != null) {
+      payouts.insert(0, Payout(label: '${job.title} · ${job.commune}', amount: (job.price! * (1 - commissionRate)).round(), daysAgo: 0, jobId: job.id));
     }
     notifyListeners();
   }
 
   int get earningsWeek => 18500 + proJobs.where((j) => j.status == JobStatus.completed).fold(0, (s, j) => s + (j.price ?? 0));
+
+  /// Wallet balance: everything earned minus what was already cashed out,
+  /// on top of an opening balance from before the seeded history.
+  int get balance => 6400 + payouts.fold(0, (s, p) => s + p.amount);
+
+  Future<void> cashOut() async {
+    final amount = balance;
+    if (amount <= 0) return;
+    await Future.delayed(const Duration(milliseconds: 1100));
+    payouts.insert(0, Payout(label: 'Cash out to CCP •• 4471', amount: -amount, daysAgo: 0, cashOut: true));
+    notifyListeners();
+  }
 
   // ---------- admin ----------
 
@@ -217,6 +313,7 @@ class AppState extends ChangeNotifier {
   @override
   void dispose() {
     _alertTimer?.cancel();
+    _tripTimer?.cancel();
     super.dispose();
   }
 }

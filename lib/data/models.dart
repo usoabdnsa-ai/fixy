@@ -135,6 +135,73 @@ class Message {
   final bool system;
 }
 
+/// Where the client is. The home screen's location selector picks one.
+class Address {
+  const Address(this.label, this.line, this.commune, this.location);
+  final String label;
+  final String line;
+  final String commune;
+  final LatLng location;
+}
+
+/// A bookable window for a scheduled job.
+class Slot {
+  const Slot({required this.day, required this.start, required this.end, this.taken = false});
+  final DateTime day;
+  final int start; // hour, 24h
+  final int end;
+  final bool taken;
+  String get hours => '${start.toString().padLeft(2, '0')}:00–${end.toString().padLeft(2, '0')}:00';
+}
+
+/// What the (mock) photo model thinks is wrong.
+class Diagnosis {
+  const Diagnosis({required this.issue, required this.confidence, required this.minutes, required this.parts, required this.partsCost, required this.title});
+  final String issue;
+  final double confidence; // 0..1
+  final int minutes; // labour estimate
+  final String parts;
+  final int partsCost; // DZD
+  final String title; // suggested job title
+}
+
+/// One line of the upfront price breakdown.
+class PriceLine {
+  const PriceLine(this.label, this.low, [int? high, this.note]) : high = high ?? low;
+  final String label;
+  final int low;
+  final int high;
+  final String? note;
+  bool get isRange => high != low;
+}
+
+/// Upfront estimate shown before posting. Quotes may land anywhere inside it;
+/// the accepted quote is the locked price.
+class PriceEstimate {
+  const PriceEstimate(this.lines);
+  final List<PriceLine> lines;
+  int get low => lines.fold(0, (s, l) => s + l.low);
+  int get high => lines.fold(0, (s, l) => s + l.high);
+}
+
+/// A m'lem on the way: a route and how far along it they are.
+class Trip {
+  Trip({required this.route, this.progress = 0});
+  final List<LatLng> route;
+  double progress; // 0..1 along the route
+  bool get arrived => progress >= 1;
+}
+
+/// A line in the m'lem's wallet.
+class Payout {
+  const Payout({required this.label, required this.amount, required this.daysAgo, this.jobId, this.cashOut = false});
+  final String label;
+  final int amount; // DZD, net of commission (negative for cash-outs)
+  final int daysAgo;
+  final String? jobId;
+  final bool cashOut;
+}
+
 class Job {
   Job({
     required this.id,
@@ -154,6 +221,10 @@ class Job {
     List<Message>? messages,
     this.rated = false,
     this.budgetHint,
+    this.slot,
+    this.estimate,
+    this.diagnosis,
+    this.trip,
   }) : quotes = quotes ?? [],
        messages = messages ?? [];
   final String id;
@@ -173,6 +244,10 @@ class Job {
   final List<Message> messages;
   bool rated;
   final String? budgetHint;
+  final Slot? slot; // null = instant
+  final PriceEstimate? estimate;
+  final Diagnosis? diagnosis;
+  Trip? trip; // set while the m'lem is driving over
 }
 
 class VerificationRequest {

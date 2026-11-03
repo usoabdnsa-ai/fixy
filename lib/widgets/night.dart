@@ -473,3 +473,9 @@ class ThemeSwitch extends StatelessWidget {
     );
   }
 }
+
+/// OSM tile tint for the current palette: dark inverted at night, washed
+/// paper by day, so pins and routes stay the loudest thing on the map.
+List<double> get mapTint => C.isLight ? _dayTint : _nightTint;
+const _dayTint = <double>[0.2, 0.55, 0.1, 0, 30, 0.2, 0.55, 0.1, 0, 30, 0.2, 0.55, 0.1, 0, 24, 0, 0, 0, 1, 0];
+const _nightTint = <double>[-0.096, -0.188, -0.036, 0, 88, -0.096, -0.188, -0.036, 0, 90, -0.096, -0.188, -0.036, 0, 96, 0, 0, 0, 1, 0];
