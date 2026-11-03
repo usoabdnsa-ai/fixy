@@ -49,7 +49,7 @@ class ModeSwitch extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(pro ? 'PRO MODE' : 'CLIENT MODE', style: display(size: 22, weight: FontWeight.w800)),
+                  Text(pro ? 'Pro mode' : 'Client mode', style: display(size: 22, weight: FontWeight.w800)),
                   Text(pro ? 'Take jobs, navigate, track earnings' : 'Book a m\'lem for your own place', style: TextStyle(fontSize: 13, color: C.inkSoft)),
                 ],
               ),

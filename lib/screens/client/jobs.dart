@@ -39,7 +39,7 @@ class _JobsScreenState extends State<JobsScreen> {
     final list = s.clientJobs.where((j) => isDone(j) == _done).toList();
 
     return TabPage(
-      eyebrow: 'YOUR REQUESTS',
+      eyebrow: 'Your requests',
       title: 'My',
       accent: 'jobs',
       headerChild: _Tabs(

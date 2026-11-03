@@ -14,7 +14,8 @@ loading states are real.
 | State | `provider` + one `ChangeNotifier` (`AppState`) | Small app, one store, no codegen. Riverpod is the upgrade path (see below) |
 | Maps | `flutter_map` + OSM tiles, tinted per theme | No API key needed for a student project |
 | Motion | `flutter_animate`, implicit animations, haptics via `HapticFeedback` | Every animation checks `reduceMotion(context)` |
-| Type | Barlow Condensed (display) + JetBrains Mono (data), bundled | Works offline, no Google Fonts fetch |
+| Look | v3 "Trust blue": see `.tastemaker/style-lock.md` | Light default, dark toggle |
+| Type | Plus Jakarta Sans, bundled; tabular figures for prices and times | Friendly and legible, works offline |
 | Icons | Phosphor fonts via a generated const table (`lib/widgets/icons.dart`) | `phosphor_flutter`'s Dart code breaks on Flutter 3.47 |
 
 ## Folder layout
@@ -29,7 +30,7 @@ lib/
   theme/                    tokens (C, S, R, M) and ThemeData
   widgets/
     kit.dart                buttons, cards, chips, avatar, toast, skeleton
-    night.dart              Night shift pieces: TabPage, Headline, wipeRoute, mapTint
+    brand.dart              Trust blue pieces: FixyMark logo, TabPage, Headline, wipeRoute, ThemeSwitch, mapTint
     shell.dart              bottom-tab shell shared by the 3 roles
   screens/
     shared/                 splash, onboarding, auth, track (live map), mode_switch, demo_links
@@ -61,9 +62,9 @@ on narrow slices of state, so the change is mostly mechanical.
 ## Navigation
 
 - `SplashScreen` → onboarding → `AuthScreen` (role picked at sign-in) → role shell.
-- Each role has a `Shell` with bottom tabs (`ClientShell`, `ProShell`, `AdminShell`). Detail screens are pushed on top with `wipeRoute` (volt band wipe; a fade under reduced motion).
+- Each role has a `Shell` with bottom tabs (`ClientShell`, `ProShell`, `AdminShell`). Detail screens are pushed on top with `wipeRoute` (slide in from the right; full-screen dialogs rise from below; a fade under reduced motion).
 - `ModeSwitch` replaces the whole stack with the other shell.
-- Web deep links (`?go=`) for demos and screenshots: `client`, `explore`, `jobs`, `account`, `post`, `quotes`, `tracking`, `live`, `chat`, `rate`, `profile`, `pro`, `board`, `projobs`, `navigate`, `wallet`, `proprofile`, `admin`, `verify`, `flags`, `team`. Add `&theme=light` for day mode.
+- Web deep links (`?go=`) for demos and screenshots: `client`, `explore`, `jobs`, `account`, `post`, `signup`, `quotes`, `tracking`, `live`, `chat`, `rate`, `profile`, `pro`, `board`, `projobs`, `navigate`, `wallet`, `proprofile`, `admin`, `verify`, `flags`, `team`. Light mode is the default; add `&theme=dark` for dark mode.
 
 ## Data schema
 
@@ -129,10 +130,11 @@ the job page shows it next to the original estimate. M'lems keep 90 %:
 
 ## Key flows
 
-1. **Home**: time-of-day greeting, address selector, Post a job, live free-m'lem ticker, a live booking tracker (ticking ETA, route progress, chat), trades, verified m'lems nearby.
+1. **Home**: time-of-day greeting, address selector, a search-style entry into the wizard, a service grid with starting prices, free m'lems nearby, the live booking tracker (ticking ETA, route progress, chat), top pros near you, and trust signals.
 2. **Booking wizard**: Trade → Problem (title, details, photos; Fixy AI reads the first photo and can fill the title) → When (Instant, or Scheduled with a day strip and 2-hour slots; taken slots are struck out) → Review (summary + upfront price breakdown) → posted (radar) → job page.
 3. **Live tracking**: full map with the route still to drive in volt, the m'lem gliding between ticks, an ETA badge, a technician card (rating, jobs done, verified), the last message and one-tap replies. The job page shows a mini version.
-4. **Pro mode**: online toggle, urgent job alerts with a 60 s countdown, a job board to accept or pass, Navigate (turn-by-turn card → "I'm here · start job"), hold-to-complete, and a wallet with a balance, cash-out to CCP, the commission split and history.
+4. **M'lem sign-up** (`craftsman/pro_signup.dart`): after the SMS code a new m'lem fills About you (name, trade, area, years) → ID card front and back (mock camera; the NIN is "read" off the card) → optional trade papers (CFPA diploma, carte d'artisan, registre de commerce) → Review + consent → Pending review. The application lands in the admin Verify queue with the photos attached (`VerificationRequest.uploaded`). Approving it there, or with the demo button, flips the pending screen to "You're verified". "I already have an account" on the phone step skips sign-up.
+5. **Pro mode**: online toggle, urgent job alerts with a 60 s countdown, a job board to accept or pass, Navigate (turn-by-turn card → "I'm here · start job"), hold-to-complete, and a wallet with a balance, cash-out to CCP, the commission split and history.
 
 ## Running
 

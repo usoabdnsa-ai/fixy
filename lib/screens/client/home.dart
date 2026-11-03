@@ -19,8 +19,9 @@ import 'post_request.dart';
 import 'widgets.dart';
 import '../shared/track.dart';
 
-/// Client home. One giant question and one volt action up top, a live
-/// ticker of free m'lems, then numbered trade rows and the nearest pros.
+/// Client home, trust-blue layout: greeting + question, address chip, a
+/// search-style entry into the booking wizard, a service grid, the live
+/// booking tracker, top pros near you, and why Fixy is safe.
 class ClientHome extends StatelessWidget {
   const ClientHome({super.key});
 
@@ -29,6 +30,8 @@ class ClientHome extends StatelessWidget {
     clientShellKey.currentState?.go(1);
   }
 
+  void _post(BuildContext context) => Navigator.of(context).push(wipeRoute(fullscreenDialog: true, const PostRequestScreen()));
+
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
@@ -36,120 +39,306 @@ class ClientHome extends StatelessWidget {
     final nearby = [...craftsmen.where((c) => c.verified)]..sort((a, b) => kmFrom(clientHome, a.location).compareTo(kmFrom(clientHome, b.location)));
     final freeNow = craftsmen.where((c) => c.available && kmFrom(clientHome, c.location) < 5).length;
     const gutter = EdgeInsets.symmetric(horizontal: S.gutter);
-    var section = 0;
 
     final h = DateTime.now().hour;
-    final greet = h < 12 ? 'SBAH EL KHIR' : (h < 18 ? 'SALAM' : 'MSA EL KHIR');
+    final greet = h < 12 ? 'Good morning' : (h < 18 ? 'Good afternoon' : 'Good evening');
     return TabPage(
-      eyebrow: '$greet, AMINA',
-      title: 'What',
-      accent: 'broke?',
+      eyebrow: '$greet, Amina',
+      title: 'What needs',
+      accent: 'fixing?',
       trailing: IconCircle(icon: PhosphorIconsBold.bell, label: 'Notifications', onTap: () => toast(context, 'No new notifications')),
       headerChild: Column(
         children: [
-          _Where(address: s.address).animate(delay: 300.ms).fadeIn(duration: 200.ms),
-          const SizedBox(height: 14),
-          TagButton(
-            label: 'Post a job',
-            icon: PhosphorIconsBold.camera,
-            onTap: () => Navigator.of(context).push(wipeRoute(fullscreenDialog: true, const PostRequestScreen())),
-          ).animate(delay: 350.ms).fadeIn(duration: 160.ms).moveX(begin: -24, end: 0, duration: 380.ms, curve: M.out),
-          const SizedBox(height: 14),
-          Pressable(
-            scale: 0.98,
-            semanticLabel: 'See free m\'lems on the map',
-            onTap: () => _explore(context, availableOnly: true),
-            child: Row(
-              children: [
-                LiveDot(color: C.teal),
-                const SizedBox(width: 10),
-                Text(
-                  '$freeNow FREE NOW',
-                  style: figs(size: 12, weight: FontWeight.w700, color: C.teal),
-                ),
-                const SizedBox(width: 10),
-                Expanded(child: Container(height: 1, color: C.line)),
-                const SizedBox(width: 10),
-                Text(
-                  '≤ 5 KM  →',
-                  style: figs(size: 12, weight: FontWeight.w700, color: C.inkSoft),
-                ),
-              ],
-            ),
-          ).animate(delay: 450.ms).fadeIn(duration: 200.ms),
+          _Where(address: s.address).animate(delay: 200.ms).fadeIn(duration: 220.ms),
+          const SizedBox(height: 12),
+          _SearchEntry(onTap: () => _post(context)).animate(delay: 280.ms).fadeIn(duration: 220.ms).moveY(begin: 10, end: 0, curve: M.out),
         ],
       ),
       padding: const EdgeInsets.fromLTRB(0, 0, 0, S.xxl),
       children: [
+        SectionHead('Services', action: 'Map', onAction: () => _explore(context)),
+        Padding(
+          padding: gutter,
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: .92,
+            children: [
+              for (final (i, t) in Trade.values.indexed)
+                _ServiceTile(
+                  trade: t,
+                  onTap: () => _explore(context, trade: t),
+                ).enter(context, i),
+            ],
+          ),
+        ),
+        const SizedBox(height: S.lg),
+        Padding(
+          padding: gutter,
+          child: _FreeNow(count: freeNow, onTap: () => _explore(context, availableOnly: true)),
+        ),
         if (live.isNotEmpty) ...[
-          SectionHead('Happening now', index: section++),
+          const SectionHead('Your booking'),
           Padding(
             padding: gutter,
-            child: LiveTracker(job: live.first).enter(context, 0),
+            child: LiveTracker(job: live.first).enter(context, 2),
           ),
         ],
-        SectionHead('Trades', index: section++, action: 'Map', onAction: () => _explore(context)),
-        for (final (i, t) in Trade.values.indexed)
-          _TradeRow(
-            index: i,
-            trade: t,
-            onTap: () => _explore(context, trade: t),
-          ).enter(context, i + 1),
-        SectionHead('Verified near you', index: section++, action: 'All', onAction: () => _explore(context)),
-        for (final (i, c) in nearby.take(4).indexed)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(S.gutter, 0, S.gutter, 10),
-            child: CraftsmanTile(c: c).enter(context, i + 2),
+        SectionHead('Top pros near you', action: 'See all', onAction: () => _explore(context)),
+        SizedBox(
+          height: 186,
+          child: ListView.separated(
+            padding: gutter,
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            itemCount: nearby.take(6).length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, i) => _ProCard(c: nearby[i]).enter(context, i),
           ),
+        ),
+        const SectionHead('Why people trust Fixy'),
+        const Padding(padding: gutter, child: _TrustStrip()),
       ],
     );
   }
 }
 
-/// "01  [icon]  PLUMBER        2 PROS  →" on a hairline.
-class _TradeRow extends StatelessWidget {
-  const _TradeRow({required this.index, required this.trade, required this.onTap});
-  final int index;
-  final Trade trade;
+/// Looks like a search field; opens the booking wizard.
+class _SearchEntry extends StatelessWidget {
+  const _SearchEntry({required this.onTap});
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    final count = craftsmen.where((c) => c.trade == trade).length;
     return Pressable(
+      scale: 0.98,
+      semanticLabel: 'Describe your problem and post a job',
       onTap: onTap,
-      semanticLabel: trade.label,
-      scale: 0.985,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(S.gutter, 14, S.gutter, 14),
+        height: 58,
+        padding: const EdgeInsets.fromLTRB(18, 0, 6, 0),
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: C.line)),
+          color: C.card,
+          borderRadius: BorderRadius.circular(R.md),
+          boxShadow: lift,
+          border: C.isLight ? null : Border.all(color: C.line),
         ),
         child: Row(
           children: [
-            SizedBox(
-              width: 28,
-              child: Text(idx(index), style: figs(size: 12, color: C.inkSoft)),
-            ),
-            Icon(trade.icon, size: 22, color: C.volt),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(trade.label.toUpperCase(), style: display(size: 24, weight: FontWeight.w700)),
-                  const SizedBox(height: 2),
-                  Text(trade.local.toUpperCase(), style: figs(size: 10.5, color: C.inkSoft)),
-                ],
-              ),
-            ),
-            Text(
-              '$count PROS',
-              style: figs(size: 11.5, weight: FontWeight.w700, color: C.inkSoft),
-            ),
+            Icon(PhosphorIconsBold.magnifyingGlass, size: 20, color: C.inkSoft),
             const SizedBox(width: 12),
-            Icon(PhosphorIconsBold.arrowRight, size: 16, color: C.ink),
+            Expanded(
+              child: Text('Describe the problem…', style: TextStyle(fontSize: 15.5, color: C.inkSoft)),
+            ),
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(color: C.volt, borderRadius: BorderRadius.circular(R.sm + 2)),
+              child: Icon(PhosphorIconsBold.camera, size: 20, color: C.onFill),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Service tile: soft tinted icon disc, name, starting price.
+class _ServiceTile extends StatelessWidget {
+  const _ServiceTile({required this.trade, required this.onTap});
+  final Trade trade;
+  final VoidCallback onTap;
+
+  static const _tints = [
+    (Color(0xFFE0ECFF), Color(0xFF1D4ED8)), // plumbing
+    (Color(0xFFFFF4D6), Color(0xFFB45309)), // electrical
+    (Color(0xFFDDF6F7), Color(0xFF0E7490)), // ac
+    (Color(0xFFEDE9FE), Color(0xFF6D28D9)), // mechanic
+    (Color(0xFFFFEADB), Color(0xFFC2410C)), // carpentry
+    (Color(0xFFE5F7EA), Color(0xFF15803D)), // painting
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg) = _tints[trade.index % _tints.length];
+    final pros = craftsmen.where((c) => c.trade == trade).toList();
+    final from = pros.isEmpty ? 0 : pros.map((c) => c.callout).reduce((a, b) => a < b ? a : b);
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: trade.label,
+      scale: 0.95,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: C.card,
+          borderRadius: BorderRadius.circular(R.md + 2),
+          boxShadow: lift,
+          border: C.isLight ? null : Border.all(color: C.line),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(color: C.isLight ? bg : fg.withValues(alpha: .18), shape: BoxShape.circle),
+              child: Icon(trade.icon, size: 24, color: C.isLight ? fg : bg),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              trade.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: C.ink),
+            ),
+            const SizedBox(height: 2),
+            Text(from == 0 ? 'Get quotes' : 'from ${dzd(from)}', style: figs(size: 10.5, color: C.inkSoft)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FreeNow extends StatelessWidget {
+  const _FreeNow({required this.count, required this.onTap});
+  final int count;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      scale: 0.98,
+      semanticLabel: "See $count free m'lems on the map",
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+        decoration: BoxDecoration(color: C.tealWash, borderRadius: BorderRadius.circular(R.md)),
+        child: Row(
+          children: [
+            LiveDot(color: C.teal),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: "$count m'lems free now",
+                      style: TextStyle(fontWeight: FontWeight.w700, color: C.teal),
+                    ),
+                    TextSpan(
+                      text: ' within 5 km of you',
+                      style: TextStyle(color: C.ink),
+                    ),
+                  ],
+                ),
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+            Icon(PhosphorIconsBold.caretRight, size: 16, color: C.teal),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact pro card for the horizontal "Top pros" row.
+class _ProCard extends StatelessWidget {
+  const _ProCard({required this.c});
+  final Craftsman c;
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 156,
+      child: TagCard(
+        onTap: () => openProfile(context, c),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Hero(
+                  tag: 'avatar-${c.id}',
+                  child: Avatar(craftsman: c, size: 50),
+                ),
+                const Spacer(),
+                if (c.available)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(color: C.tealWash, borderRadius: BorderRadius.circular(R.pill)),
+                    child: Text(
+                      'Free',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: C.teal),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              c.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5, color: C.ink),
+            ),
+            Text(c.trade.label, style: TextStyle(fontSize: 12.5, color: C.inkSoft)),
+            const Spacer(),
+            Row(
+              children: [
+                Stars(value: c.rating, size: 13),
+                const SizedBox(width: 6),
+                Text('(${c.jobsDone})', style: figs(size: 11, color: C.inkSoft)),
+                const Spacer(),
+                if (c.verified) Icon(PhosphorIconsFill.sealCheck, size: 16, color: C.teal),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrustStrip extends StatelessWidget {
+  const _TrustStrip();
+  @override
+  Widget build(BuildContext context) {
+    Widget item(IconData icon, String title, String sub) => Expanded(
+      child: Column(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(color: C.voltWash, shape: BoxShape.circle),
+            child: Icon(icon, size: 20, color: C.isLight ? C.volt : C.ink),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: C.ink),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            sub,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 11.5, color: C.inkSoft, height: 1.3),
+          ),
+        ],
+      ),
+    );
+    return TagCard(
+      padding: const EdgeInsets.fromLTRB(10, 16, 10, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          item(PhosphorIconsBold.shieldCheck, 'ID-verified', 'Every m\'lem checked'),
+          item(PhosphorIconsBold.receipt, 'Upfront price', 'Know it before'),
+          item(PhosphorIconsBold.star, 'Real reviews', 'One per job'),
+        ],
       ),
     );
   }
@@ -173,7 +362,7 @@ class _Where extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'SEND M\'LEMS TO',
+              'Send m\'lems to',
               style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
             ),
             const SizedBox(height: 10),
@@ -202,7 +391,7 @@ class _Where extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(a.label.toUpperCase(), style: display(size: 20, weight: FontWeight.w700)),
+                            Text(a.label, style: display(size: 20, weight: FontWeight.w700)),
                             Text('${a.line}, ${a.commune}', style: TextStyle(fontSize: 13, color: C.inkSoft)),
                           ],
                         ),
@@ -235,7 +424,7 @@ class _Where extends StatelessWidget {
           children: [
             Icon(PhosphorIconsFill.mapPin, size: 18, color: C.volt),
             const SizedBox(width: 10),
-            Text(address.label.toUpperCase(), style: figs(size: 12, weight: FontWeight.w700)),
+            Text(address.label, style: figs(size: 12, weight: FontWeight.w700)),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -273,7 +462,7 @@ class LiveTracker extends StatelessWidget {
               LiveDot(color: onSite ? C.teal : null),
               const SizedBox(width: 8),
               Text(
-                onSite ? 'ON SITE' : (trip != null ? 'ON THE WAY' : 'BOOKED'),
+                onSite ? 'On site' : (trip != null ? 'On the way' : 'Booked'),
                 style: figs(size: 11, weight: FontWeight.w700, color: onSite ? C.teal : C.volt),
               ),
               const Spacer(),
@@ -311,7 +500,7 @@ class LiveTracker extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
-                          'MIN',
+                          'min',
                           style: figs(size: 11, weight: FontWeight.w700, color: C.volt),
                         ),
                       ),

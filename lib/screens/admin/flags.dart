@@ -18,7 +18,7 @@ class FlagsScreen extends StatelessWidget {
     final s = context.watch<AppState>();
     final open = s.flags.where((f) => !f.resolved).toList();
     return TabPage(
-      eyebrow: 'MODERATION',
+      eyebrow: 'Moderation',
       title: 'Flags &',
       accent: 'disputes',
       subtitle: '${open.length} open',
@@ -54,9 +54,9 @@ class _FlagCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, tint, fg, label) = switch (f.kind) {
-      'review' => (PhosphorIconsBold.star, C.amberWash, C.amber, 'FAKE REVIEW?'),
-      'conduct' => (PhosphorIconsBold.warning, C.redWash, C.red, 'CONDUCT'),
-      _ => (PhosphorIconsBold.images, C.voltWash, C.hotText, 'LISTING'),
+      'review' => (PhosphorIconsBold.star, C.amberWash, C.amber, 'Fake review?'),
+      'conduct' => (PhosphorIconsBold.warning, C.redWash, C.red, 'Conduct'),
+      _ => (PhosphorIconsBold.images, C.voltWash, C.hotText, 'Listing'),
     };
     final s = context.read<AppState>();
     return TagCard(

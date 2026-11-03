@@ -88,7 +88,6 @@ class CraftsmanProfileScreen extends StatelessWidget {
                     ),
                     const Scanlines(opacity: .06),
                     // Volt strip along the bottom edge.
-                    Positioned(left: 0, bottom: 0, width: 72, height: 4, child: ColoredBox(color: C.volt)),
                   ],
                 ),
               ),
@@ -321,7 +320,7 @@ class _RateCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'HOURLY',
+                  'Hourly',
                   style: figs(size: 10.5, color: C.onFillSoft, weight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
@@ -332,20 +331,20 @@ class _RateCard extends StatelessWidget {
               ],
             ),
           ),
-          Container(width: 1.5, height: 40, color: C.lineStrong),
+          Container(width: 1.5, height: 40, color: C.onFillSoft.withValues(alpha: .4)),
           const SizedBox(width: S.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'CALL-OUT',
+                  'Call-out',
                   style: figs(size: 10.5, color: C.onFillSoft, weight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   c.callout == 0 ? 'Free' : dzd(c.callout),
-                  style: figs(size: 22, color: C.volt, weight: FontWeight.w700),
+                  style: figs(size: 22, color: C.onFill, weight: FontWeight.w700),
                 ),
               ],
             ),

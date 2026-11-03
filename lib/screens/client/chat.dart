@@ -123,7 +123,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
-                        'TODAY',
+                        'Today',
                         style: figs(size: 10.5, color: C.inkSoft, weight: FontWeight.w700),
                       ),
                     ),

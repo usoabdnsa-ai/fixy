@@ -46,14 +46,14 @@ class _EarningsScreenState extends State<EarningsScreen> {
               IconCircle(icon: PhosphorIconsBold.arrowLeft, label: 'Back', onTap: () => Navigator.pop(context)),
               const Spacer(),
               Text(
-                'WALLET',
+                'Wallet',
                 style: figs(size: 12, weight: FontWeight.w700, color: C.inkSoft),
               ),
             ],
           ),
           const SizedBox(height: S.xl),
           Text(
-            'AVAILABLE',
+            'Available balance',
             style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
           ),
           const SizedBox(height: 4),
@@ -109,7 +109,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         Text(
-                          '${p.daysAgo == 0 ? 'TODAY' : (p.daysAgo == 1 ? 'YESTERDAY' : '${p.daysAgo} DAYS AGO')}${p.jobId != null ? ' · ${p.jobId}' : ''}',
+                          '${p.daysAgo == 0 ? 'Today' : (p.daysAgo == 1 ? 'Yesterday' : '${p.daysAgo} days ago')}${p.jobId != null ? ' · ${p.jobId}' : ''}',
                           style: figs(size: 10.5, color: C.inkSoft),
                         ),
                       ],
@@ -146,7 +146,7 @@ class _Split extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label.toUpperCase(),
+            label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: figs(size: 10, weight: FontWeight.w700, color: accent ? C.onFillSoft : C.inkSoft),

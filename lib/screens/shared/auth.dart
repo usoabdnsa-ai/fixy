@@ -15,6 +15,7 @@ import '../../widgets/kit.dart';
 import '../admin/admin_shell.dart';
 import '../client/client_shell.dart';
 import '../craftsman/pro_shell.dart';
+import '../craftsman/pro_signup.dart';
 
 /// Role → phone → OTP. Mock: any 4 digits pass.
 class AuthScreen extends StatefulWidget {
@@ -29,6 +30,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _phone = TextEditingController();
   final _otp = TextEditingController();
   bool _loading = false;
+  bool _returningPro = false; // demo: skip sign-up and log in as Karim
   String? _error;
 
   bool get _phoneOk => RegExp(r'^0?[567]\d{8}$').hasMatch(_phone.text.replaceAll(' ', ''));
@@ -56,9 +58,15 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() => _loading = true);
     await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
-    context.read<AppState>().signIn(_role, _phone.text);
+    final s = context.read<AppState>();
+    s.signIn(_role, _phone.text);
+    // A new m'lem builds a profile and sends documents first; one who already
+    // applied sees where the application stands.
     final home = switch (_role) {
       Role.client => const ClientShell(),
+      Role.craftsman when s.myApplication?.decision == true => const ProShell(),
+      Role.craftsman when s.myApplication != null => const PendingReviewScreen(),
+      Role.craftsman when !_returningPro => const ProSignupScreen(),
       Role.craftsman => const ProShell(),
       Role.admin => const AdminShell(),
     };
@@ -86,7 +94,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Container(
                       width: 44,
                       height: 44,
-                      decoration: BoxDecoration(border: Border.all(color: C.lineStrong), borderRadius: BorderRadius.circular(R.sm)),
+                      decoration: BoxDecoration(color: C.card, shape: BoxShape.circle, boxShadow: lift),
                       child: Icon(PhosphorIconsBold.arrowLeft, size: 20, color: C.ink),
                     ),
                   ),
@@ -94,7 +102,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 const Spacer(),
                 const Wordmark(size: 22),
                 const Spacer(),
-                Text('${idx(_step)}/03', style: figs(size: 12, weight: FontWeight.w700, color: C.volt).copyWith(letterSpacing: 1.2)),
+                Text(
+                  '${_step + 1} of 3',
+                  style: figs(size: 12, weight: FontWeight.w600, color: C.inkSoft),
+                ),
               ],
             ),
           ),
@@ -108,14 +119,17 @@ class _AuthScreenState extends State<AuthScreen> {
                   Expanded(
                     child: Container(
                       margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
-                      height: 3,
-                      color: C.lineStrong,
+                      height: 6,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(color: C.line, borderRadius: BorderRadius.circular(R.pill)),
                       alignment: Alignment.centerLeft,
                       child: AnimatedFractionallySizedBox(
                         duration: M.slow,
                         curve: M.out,
                         widthFactor: i <= _step ? 1 : 0,
-                        child: Container(color: C.volt),
+                        child: Container(
+                          decoration: BoxDecoration(color: C.volt, borderRadius: BorderRadius.circular(R.pill)),
+                        ),
                       ),
                     ),
                   ),
@@ -170,10 +184,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   duration: M.fast,
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(
-                    color: sel ? C.volt : C.voltWash,
-                    borderRadius: BorderRadius.circular(R.md),
-                  ),
+                  decoration: BoxDecoration(color: sel ? C.volt : C.voltWash, borderRadius: BorderRadius.circular(R.md)),
                   child: Icon(icon, color: sel ? C.onFill : C.volt),
                 ),
                 const SizedBox(width: 14),
@@ -203,7 +214,11 @@ class _AuthScreenState extends State<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Headline('Who are you', accent: 'on Fixy?', style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02)),
+        Headline(
+          'Who are you',
+          accent: 'on Fixy?',
+          style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02),
+        ),
         const SizedBox(height: S.xl),
         option(Role.client, 'I need a repair', 'Home or business. Post jobs, compare quotes.', PhosphorIconsBold.house, 0),
         option(Role.craftsman, "I'm a m'lem", 'Get local jobs, set your rates in DZD.', PhosphorIconsBold.toolbox, 1),
@@ -219,7 +234,11 @@ class _AuthScreenState extends State<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Headline('Your phone', accent: 'number', style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02)),
+        Headline(
+          'Your phone',
+          accent: 'number',
+          style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02),
+        ),
         const SizedBox(height: 8),
         Text("We text you a code. No password to remember.", style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: S.xl),
@@ -254,6 +273,31 @@ class _AuthScreenState extends State<AuthScreen> {
           ],
         ),
         const Spacer(),
+        if (_role == Role.craftsman)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Pressable(
+              semanticLabel: _returningPro ? 'Create a new m\'lem account instead' : 'I already have a m\'lem account',
+              onTap: () => setState(() => _returningPro = !_returningPro),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 48),
+                alignment: Alignment.center,
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: _returningPro ? 'Logging in as an existing m\'lem. ' : 'New to Fixy? We\'ll set up your profile next. '),
+                      TextSpan(
+                        text: _returningPro ? 'Create an account' : 'I already have an account',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: C.isLight ? C.volt : C.ink),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: C.inkSoft),
+                ),
+              ),
+            ),
+          ),
         TagButton(label: 'Send code', loading: _loading, onTap: _phone.text.isEmpty ? null : _sendCode),
         const SizedBox(height: S.lg),
       ],
@@ -264,7 +308,11 @@ class _AuthScreenState extends State<AuthScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Headline('Enter the', accent: '4-digit code', style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02)),
+        Headline(
+          'Enter the',
+          accent: '4-digit code',
+          style: display(size: 40, weight: FontWeight.w800).copyWith(height: 1.02),
+        ),
         const SizedBox(height: 8),
         Text('Sent to +213 ${_phone.text}. Any code works in this prototype.', style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: S.xl),

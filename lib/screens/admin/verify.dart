@@ -11,6 +11,7 @@ import '../../state/app_state.dart';
 import '../../theme/theme.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/kit.dart';
+import '../shared/documents.dart';
 
 /// NIN + trade-document review. Approving stamps the badge onto the profile.
 class VerifyScreen extends StatelessWidget {
@@ -21,7 +22,7 @@ class VerifyScreen extends StatelessWidget {
     final pending = s.verifications.where((v) => v.decision == null).toList();
     final decided = s.verifications.where((v) => v.decision != null).toList();
     return TabPage(
-      eyebrow: 'TRUST & SAFETY',
+      eyebrow: 'Trust & safety',
       title: 'Verify',
       accent: "m'lems",
       subtitle: '${pending.length} waiting · target under 24 h',
@@ -31,11 +32,7 @@ class VerifyScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 30),
             child: Column(
               children: [
-                Icon(
-                  PhosphorIconsFill.sealCheck,
-                  size: 44,
-                  color: C.teal,
-                ).animate().scale(begin: const Offset(.5, .5), curve: M.spring, duration: 360.ms),
+                Icon(PhosphorIconsFill.sealCheck, size: 44, color: C.teal).animate().scale(begin: const Offset(.5, .5), curve: M.spring, duration: 360.ms),
                 const SizedBox(height: 10),
                 Text('Queue is empty', style: display(size: 18)),
               ],
@@ -49,7 +46,7 @@ class VerifyScreen extends StatelessWidget {
         if (decided.isNotEmpty) ...[
           const SizedBox(height: S.md),
           Text(
-            'DECIDED TODAY',
+            'Decided today',
             style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
           ),
           const SizedBox(height: 8),
@@ -72,7 +69,7 @@ class VerifyScreen extends StatelessWidget {
                   v.decision!
                       ? const VerifiedStamp(small: true, animate: true)
                       : Text(
-                          'REJECTED',
+                          'Rejected',
                           style: figs(size: 10.5, weight: FontWeight.w700, color: C.red),
                         ),
                 ],
@@ -117,51 +114,87 @@ class _RequestState extends State<_Request> {
                   ],
                 ),
               ),
+              if (v.uploaded)
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: C.voltWash, borderRadius: BorderRadius.circular(R.pill)),
+                  child: Text(
+                    'New',
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: C.isLight ? C.volt : C.ink),
+                  ),
+                ),
               Text(
-                '${v.submittedHoursAgo} h',
+                v.submittedHoursAgo == 0 ? 'now' : '${v.submittedHoursAgo} h',
                 style: figs(size: 11, color: v.submittedHoursAgo > 12 ? C.hotText : C.inkSoft, weight: FontWeight.w700),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          // ID card mock
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: C.bg,
-              borderRadius: BorderRadius.circular(R.sm),
-              border: Border.all(color: C.lineStrong, width: 1.5),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 56,
-                  decoration: BoxDecoration(color: C.line, borderRadius: BorderRadius.circular(4)),
-                  child: Icon(PhosphorIconsFill.user, color: C.inkSoft),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'CARTE NATIONALE D\'IDENTITÉ',
-                        style: figs(size: 9.5, weight: FontWeight.w700, color: C.inkSoft),
+          // Uploaded from the app: show the actual card photos.
+          if (v.uploaded)
+            SizedBox(
+              height: 110,
+              child: Row(
+                children: [
+                  for (final back in [false, true]) ...[
+                    Expanded(
+                      child: Pressable(
+                        semanticLabel: back ? 'View ID back' : 'View ID front',
+                        onTap: () => showDocument(
+                          context,
+                          IdCardPreview(name: c.name, nin: v.nin.replaceAll(' ', ''), back: back),
+                          back ? 'ID card · back' : 'ID card · front',
+                        ),
+                        child: FittedBox(
+                          child: IdCardPreview(name: c.name, nin: v.nin.replaceAll(' ', ''), back: back),
+                        ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(c.name.toUpperCase(), style: figs(size: 12, weight: FontWeight.w700)),
-                      const SizedBox(height: 2),
-                      Text('NIN ${v.nin}', style: figs(size: 11)),
-                    ],
+                    ),
+                    if (!back) const SizedBox(width: 8),
+                  ],
+                ],
+              ),
+            )
+          else
+            // ID card mock
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: C.bg,
+                borderRadius: BorderRadius.circular(R.sm),
+                border: Border.all(color: C.lineStrong, width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 56,
+                    decoration: BoxDecoration(color: C.line, borderRadius: BorderRadius.circular(4)),
+                    child: Icon(PhosphorIconsFill.user, color: C.inkSoft),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CARTE NATIONALE D\'IDENTITÉ',
+                          style: figs(size: 9.5, weight: FontWeight.w700, color: C.inkSoft),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(c.name.toUpperCase(), style: figs(size: 12, weight: FontWeight.w700)),
+                        const SizedBox(height: 2),
+                        Text('NIN ${v.nin}', style: figs(size: 11)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
           const SizedBox(height: 12),
           Text(
-            'CHECKLIST',
+            'Checklist',
             style: figs(size: 10.5, weight: FontWeight.w700, color: C.inkSoft),
           ),
           for (var i = 0; i < v.documents.length; i++)
@@ -196,7 +229,20 @@ class _RequestState extends State<_Request> {
                     Expanded(
                       child: Text(v.documents[i], style: const TextStyle(fontWeight: FontWeight.w600)),
                     ),
-                    Icon(PhosphorIconsBold.eye, size: 16, color: C.inkSoft),
+                    Pressable(
+                      semanticLabel: 'View ${v.documents[i]}',
+                      onTap: () => showDocument(
+                        context,
+                        v.documents[i].startsWith('National ID')
+                            ? IdCardPreview(name: c.name, nin: v.nin.replaceAll(' ', ''), back: v.documents[i].contains('back'))
+                            : const DocThumb(label: '', size: 180),
+                        v.documents[i],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(PhosphorIconsBold.eye, size: 18, color: C.inkSoft),
+                      ),
+                    ),
                   ],
                 ),
               ),

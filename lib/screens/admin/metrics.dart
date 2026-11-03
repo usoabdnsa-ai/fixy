@@ -30,7 +30,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
     final verified = craftsmen.where((c) => c.verified).length;
 
     return TabPage(
-      eyebrow: 'ADMIN · ALL WILAYAS',
+      eyebrow: 'Admin · all wilayas',
       title: 'Platform',
       accent: 'today',
       children: [
@@ -149,7 +149,7 @@ class _Stat extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label.toUpperCase(),
+            label,
             style: figs(size: 10, weight: FontWeight.w700, color: C.inkSoft),
           ),
           const SizedBox(height: 6),

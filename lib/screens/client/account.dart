@@ -34,7 +34,7 @@ class _AccountScreenState extends State<AccountScreen> {
     final s = context.watch<AppState>();
     final saved = craftsmen.where((c) => s.favorites.contains(c.id)).toList();
     return TabPage(
-      eyebrow: 'AMINA BELKACEM',
+      eyebrow: 'Amina Belkacem',
       title: 'Your',
       accent: 'account',
       children: [

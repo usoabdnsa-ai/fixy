@@ -1,15 +1,15 @@
-# Fixy style lock (v2 "Night shift", 2026-10-16)
+# Fixy style lock (v3 "Trust blue", 2026-11-03)
 
-User rejected Casbah blue ("tourism app") and picked Night shift. No arches, tiles or cultural decoration.
-Near-black #0B0C0E, card #15171B, volt #E4FF3A (fills with dark labels), hot #FF5A36 urgent, teal #2BD9A0 verified.
-Barlow Condensed uppercase display + JetBrains Mono data. Hairlines instead of cards where possible, sharp radii 3/6/8.
-Building blocks in lib/widgets/night.dart: FixyMark (bolt), Wordmark, Headline (glyph scramble), VoltRule, LiveDot,
-TabPage, wipeRoute (volt band wipe), Scanlines, idx(). Onboarding = viewfinder frame with volt corner brackets.
-Map tiles: dark inverted tint (_nightTint).
+User rejected Night shift as "cyberpunk, not the vibe of service providers" and picked Trust blue
+(Thumbtack / TaskRabbit feel). Earlier rejected: Workshop toolbox, Casbah blue ("tourism app"), Night shift.
 
-## Day / night (added 2026-10-16)
-Two palettes in lib/theme/tokens.dart (`Palette.night`, `Palette.day`); `C.*` are getters, so colors are never const.
-`C.light` (ValueNotifier) flips them; main.dart marks every element dirty so cached route pages restyle too.
-Day: paper #F6F6F1, ink slabs with volt labels (the volt role becomes ink), accent words get a volt marker
-background (`Headline._accent`), map uses `_dayTint`. Switch: `ThemeSwitch` in client Account, m'lem profile, admin Team.
-Web deep link: `?theme=light`. Painters must compare palette state in shouldRepaint.
+- Light is the default; dark is a toggle (Account > Appearance, `?theme=dark`).
+- Colors (lib/theme/tokens.dart): bg #F4F6FA, cards white, ink slate #0F172A, inkSoft #475569,
+  primary trust blue #1D4ED8 (token name `C.volt` kept for history), urgent orange #C2410C (`C.hot`),
+  verified green #15803D (`C.teal`), rating stars amber #F59E0B (`C.star`).
+- Type: Plus Jakarta Sans only (bundled). `figs()` = same face with tabular figures for prices/times.
+- Sentence case everywhere. No ALL-CAPS mono labels, no scramble text, no scanlines, no wipes.
+- Shapes: radii 10/16/22, pills for chips, circle avatars and icon buttons, soft shadows (`lift`, `glow`).
+- Logo: blue rounded tile with a white house whose door is a check (`FixyMark` in lib/widgets/brand.dart).
+- Motion: rise + fade entrances, gentle spring on press/tab pill, slide-from-right routes, sheets rise.
+- Maps: OSM tinted calm (`mapTint`), blue route, round white-ringed markers.

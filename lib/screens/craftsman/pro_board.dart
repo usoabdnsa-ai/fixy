@@ -23,7 +23,7 @@ class ProBoard extends StatelessWidget {
     final list = s.board.where((j) => kmFrom(me.location, j.location) <= s.radiusKm).toList()..sort((a, b) => a.urgency.index.compareTo(b.urgency.index));
 
     return TabPage(
-      eyebrow: 'NEW WORK',
+      eyebrow: 'New work',
       title: 'Open',
       accent: 'requests',
       subtitle: '${me.trade.label} · within ${s.radiusKm} km of ${me.commune}',
@@ -96,7 +96,7 @@ class ProBoard extends StatelessWidget {
             padding: const EdgeInsets.only(top: 4),
             child: Center(
               child: Text(
-                'SWIPE → QUOTE   ·   ← PASS',
+                'Swipe right to quote · left to pass',
                 style: figs(size: 10.5, color: C.inkSoft, weight: FontWeight.w700),
               ),
             ),
@@ -245,7 +245,7 @@ class _JobSheetState extends State<_JobSheet> {
           ),
           const SizedBox(height: S.lg),
           Text(
-            'YOUR PRICE',
+            'Your price',
             style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
           ),
           const SizedBox(height: 8),

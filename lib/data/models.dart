@@ -251,12 +251,15 @@ class Job {
 }
 
 class VerificationRequest {
-  VerificationRequest({required this.craftsman, required this.nin, required this.submittedHoursAgo, required this.documents, this.decision});
+  VerificationRequest({required this.craftsman, required this.nin, required this.submittedHoursAgo, required this.documents, this.decision, this.uploaded = false});
   final Craftsman craftsman;
   final String nin;
   final int submittedHoursAgo;
   final List<String> documents;
   bool? decision;
+
+  /// True when the m'lem sent these from the in-app sign-up (photos attached).
+  final bool uploaded;
 }
 
 class Flag {

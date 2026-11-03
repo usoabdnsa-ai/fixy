@@ -3,8 +3,12 @@ import 'package:flutter/painting.dart';
 
 import 'package:flutter/foundation.dart' show ValueNotifier;
 
-/// One set of Fixy colors. Two exist: [Palette.night] (default) and
-/// [Palette.day]. Read colors through [C]; flip with [C.light].
+/// One set of Fixy colors. v3 "Trust blue": [Palette.day] is the default,
+/// [Palette.night] is the dark-mode toggle. Read colors through [C].
+///
+/// Role names are historical: `volt` is the brand primary (trust blue),
+/// `hot` is urgent (orange), `teal` is verified/success (green), `amber`
+/// is ratings and pending.
 class Palette {
   const Palette({
     required this.bg, required this.card, required this.ink, required this.inkSoft, required this.line,
@@ -16,38 +20,35 @@ class Palette {
   final Color bg, card, ink, inkSoft, line, lineStrong, volt, voltWash, highlight, onFill, onFillSoft;
   final Color hot, hotText, hotWash, teal, tealWash, red, redWash, amber, amberWash, nightBg, seriesA, seriesB;
 
-  /// Night shift: near-black, electric volt, hairlines. Bright fills carry dark labels.
-  /// ink/bg 17.6, inkSoft/bg 7.0, volt/bg 17.0, onFill/volt 17.0, onFill/hot 6.9,
-  /// onFill/teal 10.9, hotText/bg 7.4, teal/bg 10.9.
-  static const night = Palette(
-    bg: Color(0xFF0B0C0E), card: Color(0xFF15171B), ink: Color(0xFFF2F3EE), inkSoft: Color(0xFF9198A4),
-    line: Color(0xFF262A31), lineStrong: Color(0xFF3A3F48), volt: Color(0xFFE4FF3A), voltWash: Color(0xFF22270C),
-    highlight: Color(0x00000000), onFill: Color(0xFF0B0C0E), onFillSoft: Color(0xFF34381C),
-    hot: Color(0xFFFF5A36), hotText: Color(0xFFFF7A5C), hotWash: Color(0xFF2E140D),
-    teal: Color(0xFF2BD9A0), tealWash: Color(0xFF0E2A20), red: Color(0xFFFF5A5A), redWash: Color(0xFF331414),
-    amber: Color(0xFFFFC547), amberWash: Color(0xFF2E2410), nightBg: Color(0xFF050607),
-    seriesA: Color(0xFFE4FF3A), seriesB: Color(0xFFFF5A36),
+  /// Light (default): soft grey-blue page, white cards, slate text, trust blue.
+  /// ink/bg 16.3, inkSoft/card 7.6, white/volt 6.7, hotText/card 5.2,
+  /// teal/card 5.0, amber(text)/amberWash 5.9.
+  static const day = Palette(
+    bg: Color(0xFFF4F6FA), card: Color(0xFFFFFFFF), ink: Color(0xFF0F172A), inkSoft: Color(0xFF475569),
+    line: Color(0xFFE2E8F0), lineStrong: Color(0xFFCBD5E1), volt: Color(0xFF1D4ED8), voltWash: Color(0xFFE8EFFE),
+    highlight: Color(0x00000000), onFill: Color(0xFFFFFFFF), onFillSoft: Color(0xFFDCE6FD),
+    hot: Color(0xFFC2410C), hotText: Color(0xFFC2410C), hotWash: Color(0xFFFFF1E8),
+    teal: Color(0xFF15803D), tealWash: Color(0xFFE7F7EC), red: Color(0xFFDC2626), redWash: Color(0xFFFDECEC),
+    amber: Color(0xFF92600A), amberWash: Color(0xFFFEF5E1), nightBg: Color(0xFF0F172A),
+    seriesA: Color(0xFF1D4ED8), seriesB: Color(0xFFF59E0B),
   );
 
-  /// Day shift: same tool, printed on paper. The "volt" role becomes solid
-  /// ink (black slabs with volt labels); volt itself survives as a marker
-  /// [highlight] behind accent words.
-  /// ink/bg 18.4, inkSoft/bg 6.0, onFill(volt)/volt(ink) 17.0, onFill/hot 4.9,
-  /// hotText/bg 5.3, teal/bg 4.9, white text never used on light surfaces.
-  static const day = Palette(
-    bg: Color(0xFFF6F6F1), card: Color(0xFFFFFFFF), ink: Color(0xFF0B0C0E), inkSoft: Color(0xFF575D68),
-    line: Color(0xFFE2E2DB), lineStrong: Color(0xFFC4C4BA), volt: Color(0xFF0B0C0E), voltWash: Color(0xFFEEF8B0),
-    highlight: Color(0xFFE4FF3A), onFill: Color(0xFFE4FF3A), onFillSoft: Color(0xFFB4C45A),
-    hot: Color(0xFFD33A1A), hotText: Color(0xFFC0361A), hotWash: Color(0xFFFCE6DF),
-    teal: Color(0xFF0B7A57), tealWash: Color(0xFFDDF3EA), red: Color(0xFFC62828), redWash: Color(0xFFFBE3E3),
-    amber: Color(0xFF8A5A00), amberWash: Color(0xFFFFF1D0), nightBg: Color(0xFF0B0C0E),
-    seriesA: Color(0xFF0B0C0E), seriesB: Color(0xFFD33A1A),
+  /// Dark: deep slate, lighter blue so fills keep contrast with white labels.
+  /// ink/bg 15.9, inkSoft/bg 7.2, white/volt 5.2, hotText/bg 7.0, teal/bg 8.6.
+  static const night = Palette(
+    bg: Color(0xFF0B1220), card: Color(0xFF151E31), ink: Color(0xFFF1F5F9), inkSoft: Color(0xFF94A3B8),
+    line: Color(0xFF243049), lineStrong: Color(0xFF334262), volt: Color(0xFF2F6BF0), voltWash: Color(0xFF16264A),
+    highlight: Color(0x00000000), onFill: Color(0xFFFFFFFF), onFillSoft: Color(0xFFD6E2FF),
+    hot: Color(0xFFC2410C), hotText: Color(0xFFFB923C), hotWash: Color(0xFF2E1A10),
+    teal: Color(0xFF4ADE80), tealWash: Color(0xFF12301F), red: Color(0xFFF87171), redWash: Color(0xFF331616),
+    amber: Color(0xFFFBBF24), amberWash: Color(0xFF2E2510), nightBg: Color(0xFF060A14),
+    seriesA: Color(0xFF60A5FA), seriesB: Color(0xFFFBBF24),
   );
 }
 
 class C {
-  /// true = day palette. Listened to by the app root, which restyles every screen.
-  static final light = ValueNotifier<bool>(false);
+  /// true = light palette (the default). The app root listens and restyles every screen.
+  static final light = ValueNotifier<bool>(true);
   static Palette get _p => light.value ? Palette.day : Palette.night;
   static bool get isLight => light.value;
 
@@ -55,12 +56,12 @@ class C {
   static Color get card => _p.card; // raised surface
   static Color get ink => _p.ink; // primary text
   static Color get inkSoft => _p.inkSoft;
-  static Color get line => _p.line; // hairlines
+  static Color get line => _p.line; // borders, dividers
   static Color get lineStrong => _p.lineStrong;
-  static Color get volt => _p.volt; // primary fill + highlight text
-  static Color get voltWash => _p.voltWash;
-  static Color get highlight => _p.highlight; // marker behind accent words (day only)
-  static Color get onFill => _p.onFill; // labels on volt / hot / teal
+  static Color get volt => _p.volt; // brand primary (trust blue)
+  static Color get voltWash => _p.voltWash; // primary tint for chips / icon tiles
+  static Color get highlight => _p.highlight;
+  static Color get onFill => _p.onFill; // labels on primary / urgent / success fills
   static Color get onFillSoft => _p.onFillSoft;
   static Color get hot => _p.hot; // urgent fill
   static Color get hotText => _p.hotText; // urgent as text
@@ -69,8 +70,9 @@ class C {
   static Color get tealWash => _p.tealWash;
   static Color get red => _p.red;
   static Color get redWash => _p.redWash;
-  static Color get amber => _p.amber;
+  static Color get amber => _p.amber; // pending text
   static Color get amberWash => _p.amberWash;
+  static Color get star => const Color(0xFFF59E0B); // rating stars, both themes
   static Color get night => _p.nightBg;
   static Color get seriesA => _p.seriesA;
   static Color get seriesB => _p.seriesB;
@@ -86,28 +88,34 @@ class S {
   static const gutter = 20.0;
 }
 
-/// Sharp, tool-like corners.
+/// Soft, friendly corners.
 class R {
-  static const sm = 3.0;
-  static const md = 6.0;
-  static const lg = 8.0;
+  static const sm = 10.0;
+  static const md = 16.0;
+  static const lg = 22.0;
   static const pill = 999.0;
 }
 
-/// Motion tokens. Night shift motion is fast and mechanical: hard ease-outs,
-/// wipes and scrambles, no bounce.
+/// Motion tokens: calm ease-outs and a gentle spring with a touch of overshoot.
 class M {
-  static const press = Duration(milliseconds: 90);
-  static const fast = Duration(milliseconds: 160);
-  static const base = Duration(milliseconds: 220);
-  static const slow = Duration(milliseconds: 380);
-  static const stagger = Duration(milliseconds: 40);
-  static const out = Cubic(0.16, 1, 0.3, 1); // expo-out
-  static const inOut = Cubic(0.87, 0, 0.13, 1);
-  static const spring = Cubic(0.16, 1, 0.3, 1); // no overshoot in this theme
+  static const press = Duration(milliseconds: 110);
+  static const fast = Duration(milliseconds: 180);
+  static const base = Duration(milliseconds: 260);
+  static const slow = Duration(milliseconds: 420);
+  static const stagger = Duration(milliseconds: 45);
+  static const out = Cubic(0.22, 1, 0.36, 1); // ease-out-quint
+  static const inOut = Cubic(0.65, 0, 0.35, 1);
+  static const spring = Cubic(0.34, 1.4, 0.64, 1); // small overshoot
 }
 
-/// No soft shadows on dark: depth is a hairline plus a faint volt edge glow.
-const lift = <BoxShadow>[];
-const liftPressed = <BoxShadow>[];
-List<BoxShadow> get glow => C.isLight ? const [] : const [BoxShadow(color: Color(0x40E4FF3A), blurRadius: 24, spreadRadius: -4)];
+/// Soft elevation on light; on dark, borders do the work and shadows vanish.
+List<BoxShadow> get lift => C.isLight
+    ? const [
+        BoxShadow(color: Color(0x0F0F172A), offset: Offset(0, 1), blurRadius: 2),
+        BoxShadow(color: Color(0x140F172A), offset: Offset(0, 8), blurRadius: 24, spreadRadius: -6),
+      ]
+    : const [];
+List<BoxShadow> get liftPressed => C.isLight ? const [BoxShadow(color: Color(0x0F0F172A), offset: Offset(0, 1), blurRadius: 2)] : const [];
+
+/// Brand shadow under primary buttons and live markers.
+List<BoxShadow> get glow => [BoxShadow(color: C.volt.withValues(alpha: C.isLight ? .28 : .4), offset: const Offset(0, 8), blurRadius: 20, spreadRadius: -6)];

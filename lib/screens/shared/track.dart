@@ -70,8 +70,9 @@ class TrackScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.fromLTRB(S.gutter, 16, S.gutter, 14 + pad.bottom),
             decoration: BoxDecoration(
-              color: C.bg,
-              border: Border(top: BorderSide(color: C.volt, width: 2)),
+              color: C.card,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(R.lg + 4)),
+              boxShadow: const [BoxShadow(color: Color(0x1F0F172A), blurRadius: 24, offset: Offset(0, -6))],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -82,8 +83,8 @@ class TrackScreen extends StatelessWidget {
                     LiveDot(color: trip.arrived ? C.teal : null),
                     const SizedBox(width: 8),
                     Text(
-                      trip.arrived ? 'ARRIVED' : (asPro ? 'NAVIGATING · ${km(left)} LEFT' : 'ON THE WAY · ${km(left)} LEFT'),
-                      style: figs(size: 11.5, weight: FontWeight.w700, color: trip.arrived ? C.teal : C.ink).copyWith(letterSpacing: 1),
+                      trip.arrived ? 'Arrived' : (asPro ? 'Navigating · ${km(left)} left' : 'On the way · ${km(left)} left'),
+                      style: figs(size: 11.5, weight: FontWeight.w700, color: trip.arrived ? C.teal : C.ink),
                     ),
                     const Spacer(),
                     Text(job.id, style: figs(size: 11, color: C.inkSoft)),
@@ -116,7 +117,7 @@ class TrackScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(8),
                         child: Text(
-                          'DEMO · SKIP AHEAD',
+                          'Demo: skip ahead',
                           style: figs(size: 11, color: C.inkSoft, weight: FontWeight.w700),
                         ),
                       ),
@@ -215,8 +216,8 @@ class _Van extends StatelessWidget {
       height: 34,
       decoration: BoxDecoration(
         color: arrived ? C.teal : C.volt,
-        borderRadius: BorderRadius.circular(R.sm),
-        border: Border.all(color: C.bg, width: 2),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
         boxShadow: glow,
       ),
       child: Icon(arrived ? PhosphorIconsBold.check : PhosphorIconsBold.car, size: 18, color: C.onFill),
@@ -248,10 +249,10 @@ class _HomePin extends StatelessWidget {
       height: 30,
       decoration: BoxDecoration(
         color: C.ink,
-        borderRadius: BorderRadius.circular(R.sm),
-        border: Border.all(color: C.volt, width: 2),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
       ),
-      child: Icon(PhosphorIconsFill.mapPin, size: 16, color: C.bg),
+      child: Icon(PhosphorIconsFill.house, size: 14, color: Colors.white),
     ),
   );
 }
@@ -273,7 +274,7 @@ class _EtaBadge extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              arrived ? 'HERE' : 'ETA',
+              arrived ? 'Here' : 'ETA',
               style: figs(size: 10, weight: FontWeight.w700, color: C.onFillSoft),
             ),
             if (!arrived) ...[
@@ -295,7 +296,7 @@ class _EtaBadge extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                'MIN',
+                'min',
                 style: figs(size: 11, weight: FontWeight.w700, color: C.onFill),
               ),
             ],
@@ -325,9 +326,9 @@ class _TripBar extends StatelessWidget {
         const SizedBox(height: 6),
         Row(
           children: [
-            Text('DISPATCHED', style: figs(size: 9.5, color: C.inkSoft)),
+            Text('Dispatched', style: figs(size: 9.5, color: C.inkSoft)),
             const Spacer(),
-            Text('YOUR DOOR', style: figs(size: 9.5, color: C.inkSoft)),
+            Text('Your door', style: figs(size: 9.5, color: C.inkSoft)),
           ],
         ),
       ],
@@ -370,7 +371,7 @@ class _ProCard extends StatelessWidget {
                 children: [
                   Stars(value: c.rating, size: 12),
                   const SizedBox(width: 10),
-                  Text('${c.jobsDone} JOBS · ${c.years} YRS', style: figs(size: 11, color: C.inkSoft)),
+                  Text('${c.jobsDone} jobs · ${c.years} yrs', style: figs(size: 11, color: C.inkSoft)),
                 ],
               ),
             ],
@@ -447,7 +448,7 @@ class _ChatStrip extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    last.fromMe ? 'YOU' : job.craftsman!.firstName.toUpperCase(),
+                    last.fromMe ? 'You' : job.craftsman!.firstName,
                     style: figs(size: 10.5, weight: FontWeight.w700, color: C.volt),
                   ),
                   const SizedBox(width: 10),

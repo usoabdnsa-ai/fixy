@@ -41,7 +41,7 @@ class _ProProfileState extends State<ProProfile> {
   @override
   Widget build(BuildContext context) {
     return TabPage(
-      eyebrow: 'WHAT CLIENTS SEE',
+      eyebrow: 'What clients see',
       title: 'Your',
       accent: 'profile',
       trailing: TagButton.light(
@@ -157,7 +157,7 @@ class _ProProfileState extends State<ProProfile> {
                   child: Text(c, style: const TextStyle(fontWeight: FontWeight.w700)),
                 ),
                 Text(
-                  'APPROVED',
+                  'Approved',
                   style: figs(size: 10, weight: FontWeight.w700, color: C.teal),
                 ),
               ],

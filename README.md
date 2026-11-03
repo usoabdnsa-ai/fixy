@@ -3,17 +3,19 @@
 Flutter prototype of Fixy, an on-demand repair marketplace for Algeria. It covers three roles: client, craftsman (m'lem) and admin.
 All data is local and fake (`lib/data/mock.dart`). There is no backend. "Network" calls are short delays so the loading states can be seen.
 
-## Run
+## Run it
+
+1. Install Flutter (stable): https://docs.flutter.dev/get-started/install. Chrome is enough; Android Studio is only needed for a phone or emulator.
+2. In this folder:
 
 ```bash
-export PATH=$HOME/.local/pkgs/root/usr/bin:$HOME/flutter/bin:$PATH   # unzip + flutter
 flutter pub get
-flutter run -d web-server --web-port 3200     # then open http://localhost:3200
-# or a phone/emulator once the Android SDK is installed:
+flutter run -d chrome          # opens the app in Chrome
+# or on a plugged-in Android phone / emulator:
 flutter run
 ```
 
-On a wide screen the app is framed at phone width.
+On a wide screen the app is framed at phone width. Light mode is the default; add `?theme=dark` to the URL for dark mode.
 
 ## Demo shortcuts (web)
 
@@ -21,7 +23,7 @@ Add `?go=<screen>` to open a screen straight after the splash.
 
 | Client | Craftsman | Admin |
 |---|---|---|
-| `client` home, `explore` map/list, `profile`, `post`, `jobs`, `quotes`, `tracking`, `chat`, `rate`, `account` | `pro` dashboard (a live job alert arrives after 6 s), `board`, `projobs`, `proprofile` | `admin` metrics, `verify`, `flags`, `team` (RBAC table) |
+| `client` home, `explore` map/list, `profile`, `post` booking wizard, `jobs`, `quotes`, `tracking`, `live` live map, `chat`, `rate`, `account` | `signup` new m'lem + ID upload, `pro` dashboard (a live job alert arrives after 6 s), `board`, `projobs`, `navigate`, `wallet`, `proprofile` | `admin` metrics, `verify`, `flags`, `team` (RBAC table) |
 
 When signing in normally, any Algerian mobile number (05/06/07…) and any 4-digit code work.
 

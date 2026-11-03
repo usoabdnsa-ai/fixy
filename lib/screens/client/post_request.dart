@@ -121,7 +121,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'STEP ${pos + 1} OF $total · ${_stepNames[_step].toUpperCase()}',
+                          'Step ${pos + 1} of $total · ${_stepNames[_step]}',
                           style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
                         ),
                         const SizedBox(height: 6),
@@ -290,7 +290,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
         Row(
           children: [
             Text(
-              'PHOTOS',
+              'Photos',
               style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
             ),
             const Spacer(),
@@ -418,7 +418,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                       Icon(PhosphorIconsBold.scan, size: 14, color: C.volt),
                       const SizedBox(width: 6),
                       Text(
-                        'FIXY AI · READING PHOTO',
+                        'Fixy AI is reading your photo…',
                         style: figs(size: 10.5, weight: FontWeight.w700, color: C.volt),
                       ),
                     ],
@@ -451,12 +451,12 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
               Icon(PhosphorIconsFill.sparkle, size: 14, color: C.volt),
               const SizedBox(width: 6),
               Text(
-                'FIXY AI THINKS',
+                'Fixy AI thinks',
                 style: figs(size: 10.5, weight: FontWeight.w700, color: C.volt),
               ),
               const Spacer(),
               Text(
-                '${(dx.confidence * 100).round()}% SURE',
+                '${(dx.confidence * 100).round()}% sure',
                 style: figs(size: 10.5, weight: FontWeight.w700, color: C.inkSoft),
               ),
             ],
@@ -468,13 +468,13 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
             children: [
               Icon(PhosphorIconsBold.timer, size: 14, color: C.inkSoft),
               const SizedBox(width: 4),
-              Text('~${dx.minutes} MIN', style: figs(size: 11, color: C.inkSoft)),
+              Text('~${dx.minutes} min', style: figs(size: 11, color: C.inkSoft)),
               const SizedBox(width: 14),
               Icon(PhosphorIconsBold.wrench, size: 14, color: C.inkSoft),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  dx.parts.toUpperCase(),
+                  dx.parts,
                   overflow: TextOverflow.ellipsis,
                   style: figs(size: 11, color: C.inkSoft),
                 ),
@@ -618,7 +618,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    instant ? 'INSTANT' : 'SCHEDULED',
+                                    instant ? 'Instant' : 'Scheduled',
                                     style: display(size: 18, weight: FontWeight.w700, color: _instant == instant ? C.onFill : C.ink),
                                   ),
                                 ],
@@ -637,7 +637,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
         AnimatedSize(duration: M.base, curve: M.out, alignment: Alignment.topCenter, child: _instant ? _instantInfo() : _slotPicker()),
         const SizedBox(height: S.xl),
         Text(
-          'WHERE',
+          'Where',
           style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
         ),
         const SizedBox(height: 10),
@@ -723,20 +723,20 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                   duration: M.fast,
                   width: 64,
                   decoration: BoxDecoration(
-                    color: on ? C.ink : C.card,
+                    color: on ? C.volt : C.card,
                     borderRadius: BorderRadius.circular(R.md),
-                    border: Border.all(color: on ? C.ink : C.line),
+                    border: Border.all(color: on ? C.volt : C.line),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        i == 0 ? 'TODAY' : weekday(d).toUpperCase(),
-                        style: figs(size: 10, weight: FontWeight.w700, color: on ? C.bg : C.inkSoft),
+                        i == 0 ? 'Today' : weekday(d),
+                        style: figs(size: 10, weight: FontWeight.w700, color: on ? C.onFillSoft : C.inkSoft),
                       ),
                       Text(
                         '${d.day}',
-                        style: display(size: 24, weight: FontWeight.w800, color: on ? C.bg : C.ink).copyWith(height: 1.05),
+                        style: display(size: 24, weight: FontWeight.w800, color: on ? C.onFill : C.ink).copyWith(height: 1.05),
                       ),
                     ],
                   ),
@@ -803,7 +803,7 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
           SizedBox(
             width: 92,
             child: Text(
-              k.toUpperCase(),
+              k,
               style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
             ),
           ),
@@ -826,14 +826,14 @@ class _PostRequestScreenState extends State<PostRequestScreen> {
                 children: [
                   Icon(_trade!.icon, size: 20),
                   const SizedBox(width: 8),
-                  Text(_trade!.label.toUpperCase(), style: figs(size: 12, weight: FontWeight.w700)),
+                  Text(_trade!.label, style: figs(size: 12, weight: FontWeight.w700)),
                   const Spacer(),
                   _instant
                       ? UrgencyChip(_urgency)
                       : Container(
                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(color: C.voltWash, borderRadius: BorderRadius.circular(R.sm)),
-                          child: Text('SCHEDULED', style: figs(size: 10.5, weight: FontWeight.w700, color: C.volt)),
+                          child: Text('Scheduled', style: figs(size: 10.5, weight: FontWeight.w700, color: C.volt)),
                         ),
                 ],
               ),
@@ -891,7 +891,7 @@ class PriceBreakdown extends StatelessWidget {
               Icon(PhosphorIconsBold.receipt, size: 16, color: C.volt),
               const SizedBox(width: 8),
               Text(
-                'UPFRONT ESTIMATE',
+                'Upfront estimate',
                 style: figs(size: 11, weight: FontWeight.w700, color: C.volt),
               ),
             ],
@@ -922,7 +922,7 @@ class PriceBreakdown extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  locked != null ? 'ESTIMATE WAS' : 'YOU PAY',
+                  locked != null ? 'Estimate was' : 'You pay',
                   style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
                 ),
               ),
@@ -938,7 +938,7 @@ class PriceBreakdown extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'LOCKED PRICE',
+                    'Locked price',
                     style: figs(size: 11, weight: FontWeight.w700, color: C.teal),
                   ),
                 ),

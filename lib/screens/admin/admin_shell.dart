@@ -67,7 +67,7 @@ class _AdminAccount extends StatelessWidget {
         ),
         const SizedBox(height: S.lg),
         Text(
-          'ROLE PERMISSIONS (RBAC)',
+          'Role permissions (RBAC)',
           style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
         ),
         const SizedBox(height: 8),

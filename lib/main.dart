@@ -21,7 +21,7 @@ void main() {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  if (Uri.base.queryParameters['theme'] == 'light') C.light.value = true;
+  if (Uri.base.queryParameters['theme'] == 'dark') C.light.value = false;
   // Colors are read from C at build time, so a theme flip just needs every
   // element (including cached route pages) to build again.
   C.light.addListener(() {
@@ -53,12 +53,12 @@ class FixyApp extends StatelessWidget {
           final w = MediaQuery.sizeOf(context).width;
           if (w <= 520) return child!;
           return ColoredBox(
-            color: const Color(0xFFE9E4DA),
+            color: const Color(0xFFE2E8F0),
             child: Center(
               child: Container(
                 width: 420,
                 height: MediaQuery.sizeOf(context).height,
-                decoration: const BoxDecoration(boxShadow: lift),
+                decoration: BoxDecoration(boxShadow: lift),
                 child: MediaQuery(
                   data: MediaQuery.of(context).copyWith(
                     size: Size(416, MediaQuery.sizeOf(context).height),

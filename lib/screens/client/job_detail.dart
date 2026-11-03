@@ -58,7 +58,7 @@ class JobDetailScreen extends StatelessWidget {
                       Icon(job.trade.icon, size: 18, color: C.volt),
                       const SizedBox(width: 6),
                       Text(
-                        job.trade.label.toUpperCase(),
+                        job.trade.label,
                         style: figs(size: 12, weight: FontWeight.w700, color: C.volt),
                       ),
                       const SizedBox(width: 10),
@@ -66,7 +66,7 @@ class JobDetailScreen extends StatelessWidget {
                       if (job.slot != null) ...[
                         Flexible(
                           child: Text(
-                            '${dayLabel(job.slot!.day).toUpperCase()} · ${job.slot!.hours}',
+                            '${dayLabel(job.slot!.day)} · ${job.slot!.hours}',
                             overflow: TextOverflow.ellipsis,
                             style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
                           ),
@@ -162,7 +162,7 @@ class JobDetailScreen extends StatelessWidget {
                           border: Border.all(color: C.lineStrong, width: 1.5),
                         ),
                         child: Text(
-                          job.status == JobStatus.accepted ? "DEMO · m'lem arrives on site" : 'DEMO · m\'lem marks job done',
+                          job.status == JobStatus.accepted ? "Demo: m'lem arrives on site" : 'Demo: m\'lem marks job done',
                           style: figs(size: 11, color: C.inkSoft, weight: FontWeight.w700),
                         ),
                       ),
@@ -276,12 +276,12 @@ class _LiveMapCard extends StatelessWidget {
                     LiveDot(color: t.arrived ? C.teal : null),
                     const SizedBox(width: 8),
                     Text(
-                      t.arrived ? '${job.craftsman!.firstName.toUpperCase()} IS HERE' : '${job.craftsman!.firstName.toUpperCase()} · ${etaMins(t)} MIN AWAY',
+                      t.arrived ? '${job.craftsman!.firstName} is here' : '${job.craftsman!.firstName} · ${etaMins(t)} min away',
                       style: figs(size: 12, weight: FontWeight.w700, color: t.arrived ? C.teal : C.ink),
                     ),
                     const Spacer(),
                     Text(
-                      'LIVE MAP →',
+                      'Live map',
                       style: figs(size: 11, weight: FontWeight.w700, color: C.volt),
                     ),
                   ],
@@ -344,7 +344,7 @@ class _QuoteCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Text(
-                'LOWEST PRICE',
+                'Lowest price',
                 style: figs(size: 10.5, weight: FontWeight.w700, color: C.hotText),
               ),
             ),

@@ -140,7 +140,7 @@ class _RateScreenState extends State<RateScreen> {
                     style: figs(size: 44, weight: FontWeight.w700, color: C.teal),
                   ),
                   Text(
-                    'REVIEW FILED',
+                    'Review filed',
                     style: figs(size: 13, weight: FontWeight.w700, color: C.teal),
                   ),
                 ],

@@ -18,6 +18,7 @@ import '../client/rate.dart';
 import '../craftsman/pro_shell.dart';
 import 'auth.dart';
 import 'track.dart';
+import '../craftsman/pro_signup.dart';
 import '../craftsman/earnings.dart';
 
 /// Web demo shortcut: `?go=<screen>` jumps straight to a screen after the
@@ -64,6 +65,9 @@ bool openDeepLink(BuildContext context) {
       final pj = s.proJobs.firstWhere((j) => j.status == JobStatus.accepted);
       s.startNavigation(pj);
       nav.push(wipeRoute(TrackScreen(job: pj, asPro: true)));
+    case 'signup':
+      s.signIn(Role.craftsman, '0555123456');
+      nav.pushAndRemoveUntil(fadeRoute(const ProSignupScreen()), (_) => false);
     case 'wallet':
       root(Role.craftsman, const ProShell(), const EarningsScreen());
     case 'chat':

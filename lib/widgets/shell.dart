@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/theme.dart';
 import '../theme/tokens.dart';
@@ -66,43 +67,23 @@ class _Bar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
-    final n = items.length + (center != null ? 1 : 0);
-    // Slot of the active tab, accounting for the centre action.
-    final slot = center != null && index >= items.length ~/ 2 ? index + 1 : index;
     final slots = <Widget>[];
     for (var i = 0; i < items.length; i++) {
       if (center != null && i == items.length ~/ 2) slots.add(Expanded(child: _CenterAction(center!)));
-      slots.add(Expanded(child: _Tab(item: items[i], active: i == index, onTap: () => onTap(i))));
+      slots.add(
+        Expanded(
+          child: _Tab(item: items[i], active: i == index, onTap: () => onTap(i)),
+        ),
+      );
     }
     return Container(
       decoration: BoxDecoration(
-        color: C.bg,
-        border: Border(top: BorderSide(color: C.line)),
+        color: C.card,
+        border: C.isLight ? null : Border(top: BorderSide(color: C.line)),
+        boxShadow: C.isLight ? const [BoxShadow(color: Color(0x140F172A), blurRadius: 20, offset: Offset(0, -4))] : null,
       ),
-      padding: EdgeInsets.only(bottom: bottom + 6),
-      child: SizedBox(
-        height: 64,
-        child: LayoutBuilder(
-          builder: (context, box) {
-            final w = box.maxWidth / n;
-            return Stack(
-              children: [
-                // Volt indicator slides along the top edge to the active tab.
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 320),
-                  curve: M.out,
-                  left: w * slot + w * .25,
-                  width: w * .5,
-                  top: 0,
-                  height: 3,
-                  child: ColoredBox(color: C.volt),
-                ),
-                Row(children: slots),
-              ],
-            );
-          },
-        ),
-      ),
+      padding: EdgeInsets.only(bottom: bottom + 6, top: 6),
+      child: SizedBox(height: 62, child: Row(children: slots)),
     );
   }
 }
@@ -115,6 +96,7 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fg = active ? (C.isLight ? C.volt : C.ink) : C.inkSoft;
     return Pressable(
       onTap: onTap,
       haptic: false,
@@ -123,27 +105,45 @@ class _Tab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(active ? item.activeIcon : item.icon, size: 22, color: active ? C.volt : C.inkSoft),
-              if (item.badge > 0)
-                Positioned(
-                  right: -9,
-                  top: -5,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    color: C.hot,
-                    child: Text('${item.badge}', style: figs(size: 9.5, weight: FontWeight.w700, color: C.onFill)),
+          // Pill indicator grows behind the active icon.
+          AnimatedContainer(
+            duration: M.base,
+            curve: M.spring,
+            width: active ? 56 : 32,
+            height: 32,
+            decoration: BoxDecoration(color: active ? C.voltWash : Colors.transparent, borderRadius: BorderRadius.circular(R.pill)),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Icon(active ? item.activeIcon : item.icon, size: 22, color: fg),
+                if (item.badge > 0)
+                  Positioned(
+                    right: active ? 10 : -2,
+                    top: 0,
+                    child: Container(
+                      constraints: const BoxConstraints(minWidth: 17),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: C.red,
+                        borderRadius: BorderRadius.circular(R.pill),
+                        border: Border.all(color: C.card, width: 1.5),
+                      ),
+                      child: Text(
+                        '${item.badge}',
+                        textAlign: TextAlign.center,
+                        style: figs(size: 9, weight: FontWeight.w700, color: Colors.white),
+                      ),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           AnimatedDefaultTextStyle(
             duration: M.fast,
-            style: figs(size: 9.5, weight: FontWeight.w700, color: active ? C.ink : C.inkSoft),
-            child: Text(item.label.toUpperCase(), maxLines: 1),
+            style: GoogleFonts.plusJakartaSans(fontSize: 11.5, fontWeight: active ? FontWeight.w700 : FontWeight.w600, color: fg),
+            child: Text(item.label, maxLines: 1),
           ),
         ],
       ),
@@ -151,7 +151,7 @@ class _Tab extends StatelessWidget {
   }
 }
 
-/// "Post a job": a volt square with a plus, raised a little above the bar.
+/// "Post a job": a raised blue circle with a plus.
 class _CenterAction extends StatelessWidget {
   const _CenterAction(this.c);
   final ({IconData icon, String label, VoidCallback onTap}) c;
@@ -163,9 +163,14 @@ class _CenterAction extends StatelessWidget {
         semanticLabel: c.label,
         scale: 0.88,
         child: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(color: C.volt, borderRadius: BorderRadius.circular(R.sm), boxShadow: glow),
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: C.volt,
+            shape: BoxShape.circle,
+            boxShadow: glow,
+            border: Border.all(color: C.card, width: 3),
+          ),
           child: Icon(c.icon, color: C.onFill, size: 26),
         ),
       ),

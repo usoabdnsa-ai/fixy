@@ -28,7 +28,7 @@ class ProHome extends StatelessWidget {
     return Stack(
       children: [
         TabPage(
-          eyebrow: 'THURSDAY 15 OCT',
+          eyebrow: 'Thursday 15 Oct',
           title: 'Sbah el khir,',
           accent: me.firstName,
           trailing: Avatar(craftsman: me, size: 44),
@@ -232,7 +232,7 @@ class _Kpi extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label.toUpperCase(),
+                label,
                 style: figs(size: 10, weight: FontWeight.w700, color: accent ? C.onFillSoft : C.inkSoft),
               ),
               const SizedBox(height: 4),
@@ -266,7 +266,7 @@ class EarningsChart extends StatelessWidget {
             children: [
               const Text('Earnings', style: TextStyle(fontWeight: FontWeight.w700)),
               const Spacer(),
-              Text('THIS WEEK  →', style: figs(size: 10.5, color: C.inkSoft)),
+              Text('This week', style: figs(size: 10.5, color: C.inkSoft)),
             ],
           ),
           const SizedBox(height: 14),
@@ -345,20 +345,21 @@ class _IncomingAlertState extends State<_IncomingAlert> with SingleTickerProvide
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: C.hot,
-        borderRadius: BorderRadius.circular(R.lg - 4),
-        boxShadow: const [BoxShadow(color: Color(0x40172033), offset: Offset(0, 12), blurRadius: 28, spreadRadius: -8)],
+        color: C.card,
+        borderRadius: BorderRadius.circular(R.lg),
+        border: Border.all(color: C.hot.withValues(alpha: .5), width: 1.5),
+        boxShadow: const [BoxShadow(color: Color(0x330F172A), offset: Offset(0, 16), blurRadius: 36, spreadRadius: -8)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(PhosphorIconsBold.siren, size: 16, color: C.onFill),
+              Icon(PhosphorIconsBold.siren, size: 16, color: C.hotText),
               const SizedBox(width: 6),
               Text(
-                'URGENT · ${km(d)} AWAY',
-                style: figs(size: 11.5, weight: FontWeight.w700, color: C.onFill),
+                'Urgent · ${km(d)} away',
+                style: figs(size: 11.5, weight: FontWeight.w700, color: C.hotText),
               ),
               const Spacer(),
               SizedBox(
@@ -369,10 +370,10 @@ class _IncomingAlertState extends State<_IncomingAlert> with SingleTickerProvide
                   builder: (_, _) => Stack(
                     alignment: Alignment.center,
                     children: [
-                      CircularProgressIndicator(value: 1 - _ring.value, strokeWidth: 3, color: C.onFill, backgroundColor: Colors.white.withValues(alpha: .25)),
+                      CircularProgressIndicator(value: 1 - _ring.value, strokeWidth: 3, color: C.hot, backgroundColor: C.hotWash),
                       Text(
                         '${(60 * (1 - _ring.value)).ceil()}',
-                        style: figs(size: 10, weight: FontWeight.w700, color: C.onFill),
+                        style: figs(size: 10, weight: FontWeight.w700, color: C.hotText),
                       ),
                     ],
                   ),
@@ -381,11 +382,11 @@ class _IncomingAlertState extends State<_IncomingAlert> with SingleTickerProvide
             ],
           ),
           const SizedBox(height: 8),
-          Text(j.title, style: display(size: 20, color: C.onFill)),
+          Text(j.title, style: display(size: 22)),
           const SizedBox(height: 4),
           Text(
             '${j.clientName} · ${j.commune} · ${j.budgetHint ?? ''}',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: C.onFillSoft),
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: C.inkSoft),
           ),
           const SizedBox(height: 12),
           Row(
@@ -396,7 +397,7 @@ class _IncomingAlertState extends State<_IncomingAlert> with SingleTickerProvide
               const SizedBox(width: 10),
               Expanded(
                 flex: 2,
-                child: TagButton.dark(
+                child: TagButton(
                   compact: true,
                   label: 'Accept job',
                   icon: PhosphorIconsBold.check,
@@ -417,7 +418,7 @@ class _IncomingAlertState extends State<_IncomingAlert> with SingleTickerProvide
                 padding: EdgeInsets.all(6),
                 child: Text(
                   'See details',
-                  style: TextStyle(fontWeight: FontWeight.w700, color: C.onFill, decoration: TextDecoration.underline, decorationColor: C.onFill),
+                  style: TextStyle(fontWeight: FontWeight.w700, color: C.isLight ? C.volt : C.ink),
                 ),
               ),
             ),

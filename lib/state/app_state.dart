@@ -296,6 +296,47 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ---------- m'lem sign-up ----------
+
+  /// The application this device submitted, if any. It sits in the admin
+  /// Verify queue like any other request.
+  VerificationRequest? myApplication;
+
+  Future<void> submitApplication({
+    required String name,
+    required Trade trade,
+    required String commune,
+    required int years,
+    required String nin,
+    required List<String> documents,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 1200));
+    final c = Craftsman(
+      id: 'c-new',
+      name: name,
+      trade: trade,
+      commune: commune,
+      wilaya: 'Alger',
+      location: clientHome,
+      years: years,
+      hourly: 1500,
+      callout: 1000,
+      verified: false,
+      available: false,
+      jobsDone: 0,
+      bio: '',
+      photos: const [],
+      reviews: [],
+      skills: const [],
+      wilayas: const ['Alger'],
+      responseMins: 15,
+      certificates: documents.where((d) => !d.startsWith('National ID')).toList(),
+    );
+    myApplication = VerificationRequest(craftsman: c, nin: nin, submittedHoursAgo: 0, documents: documents, uploaded: true);
+    verifications.insert(0, myApplication!);
+    notifyListeners();
+  }
+
   // ---------- admin ----------
 
   void decide(VerificationRequest v, bool approve) {

@@ -27,7 +27,7 @@ class ProJobs extends StatelessWidget {
     final active = s.proJobs.where((j) => j.status != JobStatus.completed).toList();
     final done = s.proJobs.where((j) => j.status == JobStatus.completed).toList();
     return TabPage(
-      eyebrow: 'BOOKED WORK',
+      eyebrow: 'Booked work',
       title: 'My',
       accent: 'jobs',
       subtitle: '${active.length} active · ${done.length} done today',

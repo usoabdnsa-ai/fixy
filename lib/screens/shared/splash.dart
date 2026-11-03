@@ -3,17 +3,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../main.dart';
-import '../../theme/theme.dart';
+
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../widgets/icons.dart';
 import '../../theme/tokens.dart';
 import '../../widgets/kit.dart';
 import 'demo_links.dart';
 import 'onboarding.dart';
 
-/// Intro, ~2.4s, skippable by tap. A night-shift boot sequence:
-///  1. a volt scanline sweeps down the black screen,
-///  2. three mono status lines type themselves in,
-///  3. the volt square wipes in and the bolt is punched out of it,
-///  4. "FIXY" decodes from random glyphs.
+/// Intro, ~2.2s, skippable by tap. On brand blue:
+///  1. soft rings ripple out from the centre,
+///  2. the white house tile pops in with a little spring,
+///  3. the check mark draws itself in the doorway,
+///  4. "fixy" and the promise rise in underneath.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override
@@ -21,11 +24,9 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400));
+  late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2200));
   Timer? _t;
   bool _left = false;
-
-  static const _lines = ['> LOCATING YOU ......... KOUBA, ALGER', "> SCANNING M'LEMS ...... 12 ONLINE", '> VERIFIED IDS ......... OK'];
 
   @override
   void didChangeDependencies() {
@@ -33,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if (_t != null) return;
     final still = reduceMotion(context);
     still ? _c.value = 1 : _c.forward();
-    _t = Timer(Duration(milliseconds: still ? 500 : 2800), _next);
+    _t = Timer(Duration(milliseconds: still ? 500 : 2600), _next);
   }
 
   void _next() {
@@ -55,92 +56,96 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final pad = MediaQuery.paddingOf(context);
+    const blue = Color(0xFF1D4ED8);
     return Scaffold(
-      backgroundColor: C.bg,
+      backgroundColor: blue,
       body: GestureDetector(
         onTap: _next,
         behavior: HitTestBehavior.opaque,
         child: AnimatedBuilder(
           animation: _c,
           builder: (context, _) {
-            final h = MediaQuery.sizeOf(context).height;
-            final scan = _seg(0, .3, Curves.easeInOut);
+            final pop = _seg(.15, .45, M.spring);
             return Stack(
               children: [
-                const Positioned.fill(child: Scanlines(opacity: .035)),
-                // Sweep line with a fading trail.
-                if (scan > 0 && scan < 1)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: h * scan - 80,
-                    height: 82,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [C.volt.withValues(alpha: 0), C.volt.withValues(alpha: .13), C.volt],
-                          stops: [0, .97, 1],
+                // Soft brand gradient.
+                const Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF2563EB), Color(0xFF1E3A8A)]),
+                    ),
+                  ),
+                ),
+                // Ripples.
+                for (var i = 0; i < 3; i++)
+                  Center(
+                    child: Opacity(
+                      opacity: (1 - _seg(i * .12, .55 + i * .12, Curves.easeOut)) * .25 * (_c.value > i * .12 ? 1 : 0),
+                      child: Container(
+                        width: 120 + 360 * _seg(i * .12, .55 + i * .12, Curves.easeOut),
+                        height: 120 + 360 * _seg(i * .12, .55 + i * .12, Curves.easeOut),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
                         ),
                       ),
                     ),
                   ),
-                // Boot log, top left.
-                Positioned(
-                  left: S.gutter,
-                  right: S.gutter,
-                  top: pad.top + 28,
+                Center(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (final (i, l) in _lines.indexed)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                      Transform.scale(
+                        scale: pop,
+                        child: Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 30, offset: Offset(0, 12))],
+                          ),
+                          alignment: Alignment.center,
+                          child: FixyMark(size: 72, bolt: _seg(.4, .62, Curves.easeInOut)),
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      Opacity(
+                        opacity: _seg(.55, .75),
+                        child: Transform.translate(
+                          offset: Offset(0, 12 * (1 - _seg(.55, .8))),
                           child: Text(
-                            l.substring(0, (l.length * _seg(.12 + i * .12, .3 + i * .12, Curves.linear)).round()),
-                            style: figs(size: 11, color: i == 2 && _c.value > .55 ? C.teal : C.inkSoft),
+                            'fixy',
+                            style: GoogleFonts.plusJakartaSans(fontSize: 44, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1.5, height: 1),
                           ),
                         ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  left: S.gutter,
-                  right: S.gutter,
-                  bottom: pad.bottom + 120,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FixyMark(size: 84, reveal: _seg(.5, .62, M.inOut), bolt: _seg(.6, .75)),
-                      const SizedBox(height: 22),
-                      if (_c.value > .66) Headline('FIXY', style: display(size: 120, weight: FontWeight.w800).copyWith(height: .82, letterSpacing: -2)),
-                      if (_c.value <= .66) SizedBox(height: 120 * .82 * 1.2),
-                      const SizedBox(height: 14),
+                      ),
+                      const SizedBox(height: 10),
                       Opacity(
-                        opacity: _seg(.85, 1),
-                        child: Row(
-                          children: [
-                            Container(width: 28, height: 3, color: C.volt),
-                            const SizedBox(width: 10),
-                            Text("VERIFIED M'LEMS. ANY HOUR.", style: figs(size: 12, weight: FontWeight.w700)),
-                          ],
+                        opacity: _seg(.7, .9),
+                        child: Text(
+                          'Trusted repairs, right at your door.',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.white.withValues(alpha: .85)),
                         ),
                       ),
                     ],
                   ),
                 ),
                 Positioned(
-                  left: S.gutter,
-                  right: S.gutter,
+                  left: 0,
+                  right: 0,
                   bottom: pad.bottom + 32,
                   child: Opacity(
-                    opacity: _seg(.85, 1),
+                    opacity: _seg(.8, 1),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('ALGER · ORAN · CONSTANTINE', style: figs(size: 10.5, color: C.inkSoft)),
-                        const Spacer(),
-                        Text('58 WILAYAS', style: figs(size: 10.5, color: C.inkSoft)),
+                        const Icon(PhosphorIconsFill.sealCheck, size: 16, color: Colors.white),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Every m'lem ID-verified",
+                          style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                        ),
                       ],
                     ),
                   ),

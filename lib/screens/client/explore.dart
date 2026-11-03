@@ -539,7 +539,7 @@ class _FilterSheetState extends State<_FilterSheet> {
   Widget _label(String t) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Text(
-      t.toUpperCase(),
+      t,
       style: figs(size: 11, weight: FontWeight.w700, color: C.inkSoft),
     ),
   );
