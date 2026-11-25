@@ -139,7 +139,7 @@ class _AuthScreenState extends State<AuthScreen> {
               const SizedBox(height: S.sm),
               Btn(_login ? 'Se connecter' : "S'inscrire", loading: _busy, onTap: _submit),
               const SizedBox(height: S.xl),
-              _DemoCard(onClient: () => _fillDemo(demoClientPhone), onProvider: () => _fillDemo(demoProviderPhone)),
+              _DemoCard(onClient: () => _fillDemo(demoClientPhone), onProvider: () => _fillDemo(demoProviderPhone), onAdmin: () => _fillDemo(demoAdminPhone)),
             ],
           ),
         ),
@@ -232,8 +232,8 @@ class _Field extends StatelessWidget {
 
 /// Shortcut for the demo: fills in a seeded account.
 class _DemoCard extends StatelessWidget {
-  const _DemoCard({required this.onClient, required this.onProvider});
-  final VoidCallback onClient, onProvider;
+  const _DemoCard({required this.onClient, required this.onProvider, required this.onAdmin});
+  final VoidCallback onClient, onProvider, onAdmin;
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(S.lg),
@@ -258,6 +258,8 @@ class _DemoCard extends StatelessWidget {
             Expanded(child: Btn.outline('Prestataire', compact: true, icon: PhosphorIconsBold.wrench, onTap: onProvider)),
           ],
         ),
+        const SizedBox(height: S.sm),
+        Btn.outline('Administrateur', compact: true, icon: PhosphorIconsBold.shieldCheck, onTap: onAdmin),
       ],
     ),
   );

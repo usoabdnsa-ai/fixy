@@ -11,6 +11,8 @@ import 'auth_service.dart';
 ///
 /// Terminée and Annulée are final.
 abstract class RequestService {
+  /// Every request on the platform, newest first (admin statistics).
+  List<ServiceRequest> get all;
   List<ServiceRequest> forClient(String clientId);
   List<ServiceRequest> forProvider(String providerId);
   ServiceRequest? byId(String id);
@@ -43,6 +45,9 @@ class LocalRequestService implements RequestService {
   List<ServiceRequest> _sorted(Iterable<ServiceRequest> rs) => rs.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   @override
+  List<ServiceRequest> get all => _sorted(_items);
+
+  @override
   List<ServiceRequest> forClient(String clientId) => _sorted(_items.where((r) => r.clientId == clientId));
 
   @override
@@ -66,6 +71,7 @@ class LocalRequestService implements RequestService {
     required DateTime scheduledAt,
     String? photo,
   }) async {
+    if (provider.suspended) throw FixyException("Ce prestataire n'accepte plus de demandes pour le moment.");
     if (client.id == provider.id) throw FixyException('Vous ne pouvez pas vous envoyer une demande.');
     if (description.trim().length < 10) throw FixyException('Décrivez le problème en quelques mots (10 caractères minimum).');
     if (address.trim().length < 5) throw FixyException("Indiquez l'adresse d'intervention.");

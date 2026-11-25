@@ -50,7 +50,11 @@ class SettingsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(color: C.turqWash, borderRadius: BorderRadius.circular(R.pill)),
-                        child: Text(isPro ? 'Prestataire · ${pro?.category.label ?? ''}' : 'Client', style: body(size: 12, weight: FontWeight.w700, color: C.turqText)),
+                        child: Text(switch (u.role) {
+                          Role.prestataire => 'Prestataire · ${pro?.category.label ?? ''}',
+                          Role.admin => 'Administrateur · équipe Fixy',
+                          _ => 'Client',
+                        }, style: body(size: 12, weight: FontWeight.w700, color: C.turqText)),
                       ),
                     ],
                   ),
@@ -70,7 +74,7 @@ class SettingsScreen extends StatelessWidget {
               _Tile(icon: PhosphorIconsBold.eye, label: 'Voir mon profil public', onTap: () => push(context, ProviderProfileScreen(providerId: pro.id, preview: true))),
             ]),
           ],
-          if (!isPro) ...[
+          if (u.role == Role.client) ...[
             const SizedBox(height: S.xl),
             SectionHeader('Adresses enregistrées', action: 'Ajouter', onAction: () async {
               final a = await showAddressEditor(context);
@@ -113,7 +117,11 @@ class SettingsScreen extends StatelessWidget {
           const SectionHeader('Notifications'),
           _Group(children: [
             _SwitchTile(
-              label: isPro ? 'Nouvelles demandes' : 'Réponses à mes demandes',
+              label: switch (u.role) {
+                Role.prestataire => 'Nouvelles demandes',
+                Role.admin => 'Nouveaux prestataires et avis signalés',
+                _ => 'Réponses à mes demandes',
+              },
               value: u.notifyRequests,
               onChanged: (v) {
                 u.notifyRequests = v;

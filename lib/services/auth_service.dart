@@ -21,6 +21,9 @@ abstract class AuthService {
   Future<void> update(AppUser user);
   Future<void> logout();
   AppUser? byId(String id);
+
+  /// Every account (admin statistics).
+  List<AppUser> get all;
 }
 
 /// Accounts stored on the device. Passwords are kept as SHA-256 hashes, never in clear.
@@ -50,6 +53,9 @@ class LocalAuthService implements AuthService {
 
   @override
   AppUser? get currentUser => _current;
+
+  @override
+  List<AppUser> get all => List.unmodifiable(_users);
 
   @override
   AppUser? byId(String id) {
@@ -106,6 +112,7 @@ class LocalAuthService implements AuthService {
   Future<void> chooseRole(Role role) async {
     final u = _current;
     if (u == null) throw FixyException('Session expirée. Reconnectez-vous.');
+    if (role == Role.admin) throw FixyException('Les comptes administrateur sont créés par l’équipe Fixy.');
     u.role = role;
     await _save();
   }

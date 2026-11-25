@@ -30,6 +30,7 @@ All passwords: **`fixy1234`**. The login screen has two buttons that fill these 
 | Client | 0550 11 22 33 | Amine Haddad (Bab Ezzouar) |
 | Prestataire | 0661 23 45 01 | Karim Benali, plombier |
 | Prestataire | any provider's number shown in the app | the other 13 providers |
+| Admin | 0560 00 00 01 | Lina Saadi, équipe Fixy |
 
 **A full loop on one phone:** log in as the client and send Karim a request. Log out, log in as Karim, accept it and mark it done. Log back in as the client and rate him. His rating updates.
 
@@ -60,15 +61,28 @@ You can also create your own accounts. Everything is saved on the phone and surv
 | 19 | Provider reviews | `screens/shared/provider_reviews.dart` |
 | 20 | Profile & settings | `screens/shared/settings.dart` |
 
+### Admin (équipe Fixy)
+
+Admin accounts can't be created from the app: nobody can pick "admin" at sign-up. The team account is seeded.
+
+| Screen | What it does | File |
+|---|---|---|
+| Tableau de bord | to-do (providers to verify, reviews to check), clients, providers, requests, average rating, requests by status / last 7 days / trade | `screens/admin/admin_dashboard.dart` |
+| Prestataires | verify (gives the "Vérifié" badge), remove the badge, suspend (hidden from search, no new requests), reactivate | `screens/admin/admin_providers.dart` |
+| Avis | reviews of 2★ or less go to a queue; keep or hide them (hidden reviews no longer count in the rating) | `screens/admin/admin_reviews.dart` |
+| Profil | same settings screen | `screens/shared/settings.dart` |
+
+Every admin action is checked in `services/admin_service.dart`, not only hidden in the UI.
+
 ## Architecture
 
 ```
 lib/
   data/       models (Provider, ServiceRequest, Review, AppUser), seed data, LocalStore
-  services/   AuthService, ProviderService, RequestService, ReviewService, FavoriteService
+  services/   AuthService, ProviderService, RequestService, ReviewService, FavoriteService, AdminService
               each one = an abstract interface + a Local* implementation
   state/      AppState (ChangeNotifier): the only thing screens talk to
-  screens/    auth · client · provider · shared
+  screens/    auth · client · provider · admin · shared
   widgets/    design kit (buttons, cards, avatar, stars, status pill…), bottom navigation
   theme/      tokens (navy #0D1B2A, turquoise #00C49A, white; Inter; 16 px radius) + ThemeData
   util/       French formatting (DA, dates), native features (dialer, photo picker)
@@ -86,7 +100,7 @@ The layers go **screens → AppState → services → LocalStore**. Only `LocalS
 flutter test
 ```
 
-15 tests cover accounts, all request status transitions (including forbidden ones), one-review-per-request, search filters and sorting, favourites, validation, and data surviving a restart.
+21 tests cover accounts, admin permissions and actions (verify, suspend, hide a review, statistics), all request status transitions (including forbidden ones), one-review-per-request, search filters and sorting, favourites, validation, and data surviving a restart.
 
 ## Out of scope (per the specification)
 

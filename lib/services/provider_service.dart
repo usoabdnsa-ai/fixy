@@ -114,6 +114,7 @@ class LocalProviderService implements ProviderService {
   List<Provider> search(ProviderQuery q, double Function(String providerId) rating) {
     final t = _fold(q.text.trim());
     final out = _items.where((p) {
+      if (p.suspended) return false;
       if (q.category != null && p.category != q.category) return false;
       if (t.isNotEmpty) {
         final hay = _fold([p.name, p.category.label, p.category.domain, p.commune, p.wilaya, ...p.services.map((s) => s.name)].join(' '));

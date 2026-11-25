@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../data/local_store.dart';
 import '../data/models.dart';
 import '../data/seed.dart';
+import '../services/admin_service.dart';
 import '../services/auth_service.dart';
 import '../services/favorite_service.dart';
 import '../services/provider_service.dart';
@@ -12,7 +13,8 @@ import '../services/review_service.dart';
 /// The one object screens talk to. It forwards to the services and tells
 /// the UI to rebuild after every change. Screens never touch storage directly.
 class AppState extends ChangeNotifier {
-  AppState._(this._store, this.auth, this.providers, this.requests, this.reviews, this.favorites);
+  AppState._(this._store, this.auth, this.providers, this.requests, this.reviews, this.favorites)
+    : admin = AdminService(auth, providers, requests, reviews);
 
   final LocalStore _store;
   final AuthService auth;
@@ -20,6 +22,7 @@ class AppState extends ChangeNotifier {
   final RequestService requests;
   final ReviewService reviews;
   final FavoriteService favorites;
+  final AdminService admin;
 
   static Future<AppState> load() async {
     final store = await LocalStore.open();
@@ -35,6 +38,8 @@ class AppState extends ChangeNotifier {
       await requests.addAll(seed.requests);
       await store.writeBool(StoreKeys.seeded, true);
     }
+    // Phones that installed the MVP before the admin role existed get the team account too.
+    if (auth.byId('a01') == null) await auth.addAll([buildAdmin()]);
     return AppState._(store, auth, providers, requests, reviews, LocalFavoriteService(store));
   }
 
@@ -82,7 +87,7 @@ class AppState extends ChangeNotifier {
   // ---------- favourites ----------
   bool isFavorite(String providerId) => user != null && favorites.idsFor(user!.id).contains(providerId);
   List<Provider> get favoriteProviders =>
-      user == null ? [] : [for (final id in favorites.idsFor(user!.id)) ?providers.byId(id)];
+      user == null ? [] : [for (final id in favorites.idsFor(user!.id)) ?providers.byId(id)].where((p) => !p.suspended).toList();
   Future<bool> toggleFavorite(String providerId) => _run(() => favorites.toggle(user!.id, providerId));
 
   // ---------- requests ----------
@@ -109,6 +114,11 @@ class AppState extends ChangeNotifier {
   Future<void> refuse(String id) => _run(() => requests.refuse(id, providerId: user!.id));
   Future<void> finish(String id) => _run(() => requests.finish(id, providerId: user!.id));
   Future<void> cancel(String id) => _run(() => requests.cancel(id, clientId: user!.id));
+
+  // ---------- admin ----------
+  Future<void> setVerified(String providerId, bool v) => _run(() => admin.setVerified(providerId, v));
+  Future<void> setSuspended(String providerId, bool v) => _run(() => admin.setSuspended(providerId, v));
+  Future<void> moderateReview(String reviewId, {required bool hidden}) => _run(() => admin.moderateReview(reviewId, hidden: hidden));
 
   Future<void> addReview(ServiceRequest r, int stars, String comment) => _run(() async {
     await reviews.add(request: r, author: user!, stars: stars, comment: comment);

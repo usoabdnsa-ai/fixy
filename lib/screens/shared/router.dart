@@ -3,6 +3,7 @@ import 'package:provider/provider.dart' hide Provider;
 
 import '../../data/models.dart';
 import '../../state/app_state.dart';
+import '../admin/admin_shell.dart';
 import '../auth/account_type.dart';
 import '../auth/auth_screen.dart';
 import '../client/client_shell.dart';
@@ -17,6 +18,7 @@ Widget homeFor(AppState s) {
   if (u == null) return const AuthScreen();
   if (u.role == null) return const AccountTypeScreen();
   if (u.role == Role.client) return const ClientShell();
+  if (u.role == Role.admin) return const AdminShell();
   if (s.myProvider == null) return const ProviderFormScreen.register();
   return const ProviderShell();
 }

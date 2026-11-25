@@ -3,7 +3,14 @@ import '../data/models.dart';
 import 'auth_service.dart';
 
 abstract class ReviewService {
+  /// Visible reviews of a provider, newest first. Hidden ones are left out.
   List<Review> forProvider(String providerId);
+
+  /// Every review including hidden ones, newest first (admin moderation).
+  List<Review> get all;
+
+  /// An admin decision: keep ([hidden] false) or hide the review.
+  Future<void> moderate(String reviewId, {required bool hidden});
   RatingSummary summary(String providerId);
   Future<Review> add({required ServiceRequest request, required AppUser author, required int stars, required String comment});
 }
@@ -19,10 +26,22 @@ class LocalReviewService implements ReviewService {
 
   @override
   List<Review> forProvider(String providerId) =>
-      _items.where((r) => r.providerId == providerId).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      _items.where((r) => r.providerId == providerId && !r.hidden).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   @override
   RatingSummary summary(String providerId) => _cache.putIfAbsent(providerId, () => RatingSummary(forProvider(providerId)));
+
+  @override
+  List<Review> get all => _items.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+  @override
+  Future<void> moderate(String reviewId, {required bool hidden}) async {
+    final r = _items.firstWhere((x) => x.id == reviewId, orElse: () => throw FixyException('Avis introuvable.'));
+    r.hidden = hidden;
+    r.moderated = true;
+    _cache.remove(r.providerId);
+    await _store.writeList(StoreKeys.reviews, _items.map((x) => x.toJson()).toList());
+  }
 
   /// One review per completed request, written by the client who made it.
   @override

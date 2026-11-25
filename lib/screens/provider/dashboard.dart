@@ -89,6 +89,31 @@ class ProviderDashboard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (p.suspended) ...[
+                    AppCard(
+                      color: C.redWash,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(PhosphorIconsBold.prohibit, size: 22, color: C.red),
+                          const SizedBox(width: S.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Compte suspendu', style: body(size: 15, weight: FontWeight.w700, color: C.red)),
+                                Text(
+                                  'Votre profil est masqué de la recherche par l’équipe Fixy. Vous pouvez terminer vos demandes en cours.',
+                                  style: body(size: 13.5, color: C.ink),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: S.lg),
+                  ],
                   Rise(
                     child: AppCard(
                       onTap: pct < 100 ? () => push(context, const ProviderFormScreen.edit()) : null,

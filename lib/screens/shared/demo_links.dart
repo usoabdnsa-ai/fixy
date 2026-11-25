@@ -5,6 +5,7 @@ import '../../data/models.dart';
 import '../../data/seed.dart';
 import '../../services/provider_service.dart';
 import '../../state/app_state.dart';
+import '../admin/admin_shell.dart';
 import '../auth/account_type.dart';
 import '../auth/auth_screen.dart';
 import '../client/categories.dart';
@@ -36,6 +37,7 @@ Future<bool> openDemoLink(BuildContext context, AppState s) async {
     nav.push(MaterialPageRoute(builder: (_) => top));
   }
 
+  const adminScreens = {'admin', 'adminproviders', 'adminreviews'};
   const providerScreens = {'dashboard', 'manage', 'edit', 'proreviews', 'prosettings', 'prodetail'};
   if (go == 'onboarding') {
     replace(const OnboardingScreen());
@@ -47,7 +49,10 @@ Future<bool> openDemoLink(BuildContext context, AppState s) async {
     return true;
   }
   await s.finishOnboarding();
-  await s.login(providerScreens.contains(go) ? demoProviderPhone : demoClientPhone, demoPassword);
+  await s.login(
+    adminScreens.contains(go) ? demoAdminPhone : (providerScreens.contains(go) ? demoProviderPhone : demoClientPhone),
+    demoPassword,
+  );
 
   switch (go) {
     case 'type':
@@ -96,6 +101,12 @@ Future<bool> openDemoLink(BuildContext context, AppState s) async {
       over(const ProviderShell(), const ProviderFormScreen.edit());
     case 'prodetail':
       over(const ProviderShell(initial: 1), const RequestDetailScreen(requestId: 'r_demo3'));
+    case 'admin':
+      replace(const AdminShell());
+    case 'adminproviders':
+      replace(const AdminShell(initial: 1));
+    case 'adminreviews':
+      replace(const AdminShell(initial: 2));
     default:
       return false;
   }

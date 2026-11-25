@@ -25,7 +25,8 @@ enum Category {
   static Category byName(String n) => Category.values.firstWhere((c) => c.name == n, orElse: () => Category.plombier);
 }
 
-enum Role { client, prestataire }
+/// [admin] accounts are created by the Fixy team only; nobody can pick it at sign-up.
+enum Role { client, prestataire, admin }
 
 /// The 4 request statuses from the specification.
 enum RequestStatus {
@@ -137,6 +138,7 @@ class Provider {
     this.available = true,
     this.availableWeekend = false,
     this.urgent = false,
+    this.suspended = false,
   });
 
   final String id;
@@ -158,6 +160,9 @@ class Provider {
   bool available; // available today
   bool availableWeekend;
   bool urgent; // takes emergencies
+
+  /// Set by an admin: hidden from search and can't receive new requests.
+  bool suspended;
 
   /// Lowest service price: the "à partir de" price on cards.
   int get fromPrice => services.isEmpty ? 0 : services.map((s) => s.priceDa).reduce((a, b) => a < b ? a : b);
@@ -191,6 +196,7 @@ class Provider {
     'available': available,
     'availableWeekend': availableWeekend,
     'urgent': urgent,
+    'suspended': suspended,
   };
 
   factory Provider.fromJson(Map<String, dynamic> j) => Provider(
@@ -209,6 +215,7 @@ class Provider {
     available: j['available'] ?? true,
     availableWeekend: j['availableWeekend'] ?? false,
     urgent: j['urgent'] ?? false,
+    suspended: j['suspended'] ?? false,
   );
 }
 
@@ -295,6 +302,8 @@ class Review {
     required this.createdAt,
     this.requestId,
     this.authorId,
+    this.hidden = false,
+    this.moderated = false,
   });
 
   final String id;
@@ -306,6 +315,12 @@ class Review {
   final String comment;
   final DateTime createdAt;
 
+  /// Hidden by an admin (moderation): not shown and not counted in the rating.
+  bool hidden;
+
+  /// An admin has looked at it (kept or hidden), so it leaves the moderation queue.
+  bool moderated;
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'providerId': providerId,
@@ -315,6 +330,8 @@ class Review {
     'stars': stars,
     'comment': comment,
     'createdAt': createdAt.toIso8601String(),
+    'hidden': hidden,
+    'moderated': moderated,
   };
 
   factory Review.fromJson(Map<String, dynamic> j) => Review(
@@ -326,6 +343,8 @@ class Review {
     stars: j['stars'],
     comment: j['comment'],
     createdAt: DateTime.parse(j['createdAt']),
+    hidden: j['hidden'] ?? false,
+    moderated: j['moderated'] ?? false,
   );
 }
 

@@ -178,4 +178,61 @@ void main() {
     p.services = [ServiceRate(name: 'Test', priceDa: 0)];
     expect(() => s.saveProvider(p), throwsA(isA<FixyException>()));
   });
+
+  group('Administration', () {
+    test('seul un admin peut vérifier, suspendre ou modérer', () async {
+      await s.login(demoClientPhone, demoPassword);
+      await expectLater(s.setVerified('p14', true), throwsA(isA<FixyException>()));
+      await expectLater(s.setSuspended('p01', true), throwsA(isA<FixyException>()));
+      await expectLater(s.moderateReview('vp11_1', hidden: true), throwsA(isA<FixyException>()));
+      expect(s.providers.byId('p14')!.verified, isFalse);
+    });
+
+    test('personne ne peut se donner le rôle admin à l’inscription', () async {
+      await s.register(name: 'Pirate Test', phone: '0770 99 88 77', password: 'secret1');
+      await expectLater(s.chooseRole(Role.admin), throwsA(isA<FixyException>()));
+      expect(s.user!.role, isNull);
+    });
+
+    test('vérifier un prestataire lui donne le badge et le retire de la file', () async {
+      await s.login(demoAdminPhone, demoPassword);
+      expect(s.user!.role, Role.admin);
+      expect(s.admin.toVerify.map((p) => p.id), containsAll(['p11', 'p14']));
+      await s.setVerified('p14', true);
+      expect(s.providers.byId('p14')!.verified, isTrue);
+      expect(s.admin.toVerify.map((p) => p.id), isNot(contains('p14')));
+    });
+
+    test('un prestataire suspendu disparaît de la recherche et ne reçoit plus de demandes', () async {
+      await s.login(demoAdminPhone, demoPassword);
+      await s.setSuspended('p01', true);
+      expect(s.search(const ProviderQuery(category: Category.plombier)).map((p) => p.id), isNot(contains('p01')));
+      await s.logout();
+      await expectLater(newRequest(), throwsA(isA<FixyException>()));
+      await s.logout();
+      await s.login(demoAdminPhone, demoPassword);
+      await s.setSuspended('p01', false);
+      expect(s.search(const ProviderQuery(category: Category.plombier)).map((p) => p.id), contains('p01'));
+    });
+
+    test('un avis masqué ne compte plus dans la note et quitte la file', () async {
+      await s.login(demoAdminPhone, demoPassword);
+      final low = s.admin.toModerate.firstWhere((r) => r.providerId == 'p11');
+      final before = s.rating('p11').count;
+      await s.moderateReview(low.id, hidden: true);
+      expect(s.rating('p11').count, before - 1);
+      expect(s.reviews.forProvider('p11').map((r) => r.id), isNot(contains(low.id)));
+      expect(s.admin.toModerate.map((r) => r.id), isNot(contains(low.id)));
+    });
+
+    test('statistiques calculées sur les vraies données', () async {
+      await s.login(demoAdminPhone, demoPassword);
+      final st = s.admin.stats(DateTime.now());
+      expect(st.clients, 1);
+      expect(st.providers, 14);
+      expect(st.requests, 5);
+      expect(st.byStatus[RequestStatus.terminee], 2);
+      expect(st.last7Days.length, 7);
+    });
+  });
 }

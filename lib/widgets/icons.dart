@@ -68,6 +68,11 @@ abstract final class PhosphorIconsBold {
   static const bellRinging = IconData(0xe5e8, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const mapTrifold = IconData(0xe31a, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const houseLine = IconData(0xe2c4, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const chartBar = IconData(0xe150, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const flag = IconData(0xe244, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const prohibit = IconData(0xe3de, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const arrowCounterClockwise = IconData(0xe038, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const shieldWarning = IconData(0xe412, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const squaresFour = IconData(0xe464, fontFamily: 'PhosphorBold', fontPackage: 'phosphor_flutter', matchTextDirection: true);
 }
 
@@ -79,6 +84,9 @@ abstract final class PhosphorIconsFill {
   static const clipboardText = IconData(0xe198, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const checkCircle = IconData(0xe184, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const sealCheck = IconData(0xe606, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const chartBar = IconData(0xe150, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const flag = IconData(0xe244, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
+  static const shieldWarning = IconData(0xe412, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const squaresFour = IconData(0xe464, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const bell = IconData(0xe0ce, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);
   static const userCircle = IconData(0xe4c4, fontFamily: 'PhosphorFill', fontPackage: 'phosphor_flutter', matchTextDirection: true);

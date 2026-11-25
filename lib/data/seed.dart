@@ -7,9 +7,21 @@ import 'models.dart';
 /// - Client: 0550 11 22 33 (Amine Haddad)
 /// - Prestataire: 0661 23 45 01 (Karim Benali, plombier), and every other
 ///   provider below with their own phone number.
+/// - Admin: 0560 00 00 01 (Lina Saadi, équipe Fixy)
 const demoPassword = 'fixy1234';
 const demoClientPhone = '0550112233';
 const demoProviderPhone = '0661234501';
+const demoAdminPhone = '0560000001';
+
+/// The Fixy team account. Admins can't sign up from the app; they are created here.
+AppUser buildAdmin() => AppUser(
+  id: 'a01',
+  name: 'Lina Saadi',
+  phone: demoAdminPhone,
+  email: 'admin@fixy.dz',
+  passwordHash: LocalAuthService.hash(demoPassword),
+  role: Role.admin,
+);
 
 class SeedData {
   SeedData(this.users, this.providers, this.reviews, this.requests);
@@ -102,6 +114,7 @@ SeedData buildSeed(DateTime now) {
       ],
     ),
     for (final pr in providers) AppUser(id: pr.id, name: pr.name, phone: pr.phone, passwordHash: hash, role: Role.prestataire),
+    buildAdmin(),
   ];
 
   // Reviews: a few per provider, spread over the last months.
