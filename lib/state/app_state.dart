@@ -1,360 +1,117 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
-import 'package:latlong2/latlong.dart';
 
-import '../data/mock.dart';
+import '../data/local_store.dart';
 import '../data/models.dart';
+import '../data/seed.dart';
+import '../services/auth_service.dart';
+import '../services/favorite_service.dart';
+import '../services/provider_service.dart';
+import '../services/request_service.dart';
+import '../services/review_service.dart';
 
-/// In-memory store for the prototype. Every "network" call is a short
-/// Future.delayed so loading states are real and visible.
+/// The one object screens talk to. It forwards to the services and tells
+/// the UI to rebuild after every change. Screens never touch storage directly.
 class AppState extends ChangeNotifier {
-  Role? role;
-  String phone = '';
+  AppState._(this._store, this.auth, this.providers, this.requests, this.reviews, this.favorites);
 
-  final List<Job> clientJobs = seedClientJobs();
-  final List<Job> board = seedBoard();
-  final List<Job> proJobs = seedProActive();
-  final List<VerificationRequest> verifications = seedVerifications();
-  final List<Flag> flags = seedFlags();
-  final Set<String> favorites = {'c1'};
+  final LocalStore _store;
+  final AuthService auth;
+  final ProviderService providers;
+  final RequestService requests;
+  final ReviewService reviews;
+  final FavoriteService favorites;
 
-  final List<Payout> payouts = seedPayouts();
-  Address address = addresses.first;
-
-  bool online = true;
-  int radiusKm = 8;
-  Job? incoming; // live alert shown on the craftsman home
-  Timer? _alertTimer;
-  Timer? _tripTimer;
-  int _seq = 2060;
-
-  AppState() {
-    // The seeded accepted job already has Karim on the road.
-    for (final j in clientJobs.where((j) => j.status == JobStatus.accepted && j.craftsman != null)) {
-      j.trip = Trip(route: routeBetween(j.craftsman!.location, j.location), progress: .3);
+  static Future<AppState> load() async {
+    final store = await LocalStore.open();
+    final auth = LocalAuthService(store);
+    final providers = LocalProviderService(store);
+    final requests = LocalRequestService(store);
+    final reviews = LocalReviewService(store);
+    if (!store.readBool(StoreKeys.seeded)) {
+      final seed = buildSeed(DateTime.now());
+      await auth.addAll(seed.users);
+      await providers.addAll(seed.providers);
+      await reviews.addAll(seed.reviews);
+      await requests.addAll(seed.requests);
+      await store.writeBool(StoreKeys.seeded, true);
     }
-    _ensureTripTimer();
+    return AppState._(store, auth, providers, requests, reviews, LocalFavoriteService(store));
   }
 
-  void signIn(Role r, String phoneNumber) {
-    role = r;
-    phone = phoneNumber;
-    if (r == Role.craftsman) _scheduleAlert();
+  // ---------- session ----------
+  AppUser? get user => auth.currentUser;
+  bool get onboarded => _store.readBool(StoreKeys.onboarded);
+  Future<void> finishOnboarding() => _store.writeBool(StoreKeys.onboarded, true);
+
+  /// The signed-in provider's profile, if the user is a prestataire with a profile.
+  Provider? get myProvider => user == null ? null : providers.byId(user!.id);
+
+  Future<T> _run<T>(Future<T> Function() f) async {
+    final r = await f();
+    notifyListeners();
+    return r;
+  }
+
+  Future<AppUser> register({required String name, required String phone, String? email, required String password}) =>
+      _run(() => auth.register(name: name, phone: phone, email: email, password: password));
+  Future<AppUser> login(String identifier, String password) => _run(() => auth.login(identifier: identifier, password: password));
+  Future<void> chooseRole(Role r) => _run(() => auth.chooseRole(r));
+  Future<void> updateUser(AppUser u) => _run(() => auth.update(u));
+  Future<void> logout() => _run(() {
+    _location = null;
+    return auth.logout();
+  });
+
+  // ---------- current location (home screen pill) ----------
+  SavedAddress? _location;
+
+  /// The address searches start from: the one picked on the home screen, else the first saved address.
+  SavedAddress? get location => _location ?? ((user?.addresses.isNotEmpty ?? false) ? user!.addresses.first : null);
+  void setLocation(SavedAddress a) {
+    _location = a;
     notifyListeners();
   }
 
-  /// Same account, other side of the marketplace. The shells swap; data stays.
-  void switchMode(Role r) {
-    role = r;
-    if (r == Role.craftsman) {
-      _scheduleAlert();
-    } else {
-      _alertTimer?.cancel();
-      incoming = null;
-    }
-    notifyListeners();
-  }
+  // ---------- providers ----------
+  RatingSummary rating(String providerId) => reviews.summary(providerId);
+  List<Provider> search(ProviderQuery q) => providers.search(q, (id) => rating(id).average);
+  List<Provider> popular({int limit = 6}) =>
+      providers.search(const ProviderQuery(sort: SortBy.recommended), (id) => rating(id).average).where((p) => rating(p.id).count >= 3).take(limit).toList();
+  Future<void> saveProvider(Provider p) => _run(() => providers.save(p));
 
-  void setAddress(Address a) {
-    address = a;
-    notifyListeners();
-  }
+  // ---------- favourites ----------
+  bool isFavorite(String providerId) => user != null && favorites.idsFor(user!.id).contains(providerId);
+  List<Provider> get favoriteProviders =>
+      user == null ? [] : [for (final id in favorites.idsFor(user!.id)) ?providers.byId(id)];
+  Future<bool> toggleFavorite(String providerId) => _run(() => favorites.toggle(user!.id, providerId));
 
-  // ---------- live trips ----------
+  // ---------- requests ----------
+  List<ServiceRequest> get myRequests => user == null ? [] : requests.forClient(user!.id);
+  List<ServiceRequest> get incoming => user == null ? [] : requests.forProvider(user!.id);
+  int incomingCount(RequestStatus s) => incoming.where((r) => r.status == s).length;
 
-  /// One shared clock moves every m'lem that is on the way. A demo trip
-  /// takes about four minutes end to end.
-  void _ensureTripTimer() {
-    _tripTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
-      var moved = false;
-      for (final j in [...clientJobs, ...proJobs]) {
-        final t = j.trip;
-        if (t == null || t.arrived || j.status != JobStatus.accepted) continue;
-        t.progress = (t.progress + 1 / 240).clamp(0.0, 1.0);
-        moved = true;
-        if (t.arrived && j.craftsman != null) {
-          j.messages.add(Message(fromMe: false, text: '${j.craftsman!.firstName} has arrived at your door.', time: 'now', system: true));
-        }
-      }
-      if (moved) notifyListeners();
-    });
-  }
+  /// Requests from the last 24 h still waiting: the "Nouvelles demandes" counter.
+  int get newIncoming =>
+      incoming.where((r) => r.status == RequestStatus.enAttente && DateTime.now().difference(r.createdAt) < const Duration(hours: 24)).length;
 
-  /// Demo shortcut on the tracking screen: jump the m'lem forward.
-  void skipAhead(Job job) {
-    final t = job.trip;
-    if (t == null) return;
-    t.progress = (t.progress + .25).clamp(0.0, .999);
-    notifyListeners();
-  }
-
-  /// M'lem side: start turn-by-turn to a booked job.
-  void startNavigation(Job job) {
-    job.trip ??= Trip(route: routeBetween(me.location, job.location));
-    notifyListeners();
-  }
-
-  /// Mock photo model. Slow enough that the scanning state is visible.
-  Future<Diagnosis> analyzePhoto(String photo, Trade? trade) async {
-    await Future.delayed(const Duration(milliseconds: 1800));
-    return diagnose(photo, trade);
-  }
-
-  void signOut() {
-    role = null;
-    _alertTimer?.cancel();
-    incoming = null;
-    notifyListeners();
-  }
-
-  void toggleFavorite(String id) {
-    favorites.contains(id) ? favorites.remove(id) : favorites.add(id);
-    notifyListeners();
-  }
-
-  // ---------- client ----------
-
-  Future<Job> postRequest({
-    required Trade trade,
-    required String title,
+  Future<ServiceRequest> createRequest({
+    required Provider provider,
+    required String service,
     required String description,
-    required Urgency urgency,
-    required List<String> photos,
-    Craftsman? direct,
-    Slot? slot,
-    PriceEstimate? estimate,
-    Diagnosis? diagnosis,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 900));
-    final job = Job(
-      id: 'FX-${_seq++}',
-      title: title.isEmpty ? '${trade.label} job' : title,
-      description: description,
-      trade: trade,
-      urgency: urgency,
-      commune: address.commune,
-      location: address.location,
-      status: JobStatus.pending,
-      postedMinsAgo: 0,
-      clientName: clientName,
-      photos: photos,
-      craftsman: direct,
-      slot: slot,
-      estimate: estimate,
-      diagnosis: diagnosis,
-    );
-    clientJobs.insert(0, job);
-    notifyListeners();
-    // Simulate craftsmen answering with quotes a few seconds later.
-    if (direct == null) {
-      Timer(const Duration(seconds: 4), () {
-        final pros = craftsmen.where((c) => c.trade == trade && c.available).take(2).toList();
-        for (final (i, p) in pros.indexed) {
-          job.quotes.add(
-            Quote(
-              craftsman: p,
-              // Inside the upfront estimate when there is one, so the promise holds.
-              amount: estimate == null ? p.callout + p.hourly * 2 : ((estimate.low + (estimate.high - estimate.low) * (i == 0 ? .3 : .75)) / 50).round() * 50,
-              eta: slot != null ? '${dayLabel(slot.day)} ${slot.start}:00' : '${p.responseMins + 10} min',
-              note: 'Can come with parts.',
-            ),
-          );
-        }
-        if (job.quotes.isNotEmpty && job.status == JobStatus.pending) job.status = JobStatus.quoted;
-        notifyListeners();
-      });
-    }
-    return job;
-  }
+    required String address,
+    required DateTime scheduledAt,
+    String? photo,
+  }) => _run(
+    () => requests.create(client: user!, provider: provider, service: service, description: description, address: address, scheduledAt: scheduledAt, photo: photo),
+  );
 
-  void acceptQuote(Job job, Quote q) {
-    job.craftsman = q.craftsman;
-    job.price = q.amount;
-    job.status = JobStatus.accepted;
-    job.messages.add(Message(fromMe: false, text: 'Quote accepted. Chat is now open with ${q.craftsman.firstName}.', time: 'now', system: true));
-    // Instant jobs dispatch right away; scheduled ones start the trip on the day.
-    if (job.slot == null) job.trip = Trip(route: routeBetween(q.craftsman.location, job.location));
-    notifyListeners();
-  }
+  Future<void> accept(String id) => _run(() => requests.accept(id, providerId: user!.id));
+  Future<void> refuse(String id) => _run(() => requests.refuse(id, providerId: user!.id));
+  Future<void> finish(String id) => _run(() => requests.finish(id, providerId: user!.id));
+  Future<void> cancel(String id) => _run(() => requests.cancel(id, clientId: user!.id));
 
-  void cancelJob(Job job) {
-    job.status = JobStatus.cancelled;
-    notifyListeners();
-  }
-
-  void sendMessage(Job job, String text) {
-    job.messages.add(Message(fromMe: true, text: text, time: 'now'));
-    notifyListeners();
-    final c = job.craftsman;
-    if (c == null) return;
-    Timer(const Duration(milliseconds: 1600), () {
-      job.messages.add(Message(fromMe: false, text: 'Bien reçu, ${c.firstName} here. I will confirm shortly.', time: 'now'));
-      notifyListeners();
-    });
-  }
-
-  /// One rating per completed job; the guard lives here, not in the UI.
-  bool rate(Job job, {required int punctuality, required int pricing, required int quality, required String text}) {
-    if (job.rated || job.status != JobStatus.completed || job.craftsman == null) return false;
-    job.craftsman!.reviews.insert(0, Review(author: 'Amina B.', punctuality: punctuality, pricing: pricing, quality: quality, text: text, daysAgo: 0));
-    job.rated = true;
-    notifyListeners();
-    return true;
-  }
-
-  // ---------- craftsman ----------
-
-  void setOnline(bool v) {
-    online = v;
-    if (!v) {
-      incoming = null;
-      _alertTimer?.cancel();
-    } else {
-      _scheduleAlert();
-    }
-    notifyListeners();
-  }
-
-  void setRadius(int v) {
-    radiusKm = v;
-    notifyListeners();
-  }
-
-  void _scheduleAlert() {
-    _alertTimer?.cancel();
-    _alertTimer = Timer(const Duration(seconds: 6), () {
-      if (!online || role != Role.craftsman) return;
-      incoming = Job(
-        id: 'FX-${_seq++}',
-        title: 'Water coming through the ceiling',
-        description: 'Neighbour upstairs is away, water is dripping from the bathroom ceiling.',
-        trade: Trade.plumbing,
-        urgency: Urgency.now,
-        commune: 'Kouba',
-        location: const LatLng(36.7330, 3.0890),
-        status: JobStatus.pending,
-        postedMinsAgo: 0,
-        clientName: 'Yasmine K.',
-        budgetHint: '3 000 – 6 000 DA',
-      );
-      notifyListeners();
-    });
-  }
-
-  void dismissIncoming() {
-    if (incoming != null) board.insert(0, incoming!);
-    incoming = null;
-    notifyListeners();
-  }
-
-  void acceptBoardJob(Job job, {int? price}) {
-    board.remove(job);
-    if (incoming == job) incoming = null;
-    job.status = JobStatus.accepted;
-    job.price = price ?? job.price;
-    proJobs.insert(0, job);
-    notifyListeners();
-  }
-
-  void declineBoardJob(Job job) {
-    board.remove(job);
-    if (incoming == job) incoming = null;
-    notifyListeners();
-  }
-
-  void advance(Job job) {
-    job.status = switch (job.status) {
-      JobStatus.accepted => JobStatus.inProgress,
-      JobStatus.inProgress => JobStatus.completed,
-      _ => job.status,
-    };
-    if (job.status == JobStatus.inProgress) job.trip?.progress = 1;
-    // Keep the client's copy in sync for the demo.
-    for (final j in clientJobs.where((j) => j.id == job.id)) {
-      j.status = job.status;
-      if (j.status == JobStatus.inProgress) j.trip?.progress = 1;
-    }
-    // A finished pro job lands in the wallet, net of commission.
-    if (job.status == JobStatus.completed && proJobs.contains(job) && job.price != null) {
-      payouts.insert(0, Payout(label: '${job.title} · ${job.commune}', amount: (job.price! * (1 - commissionRate)).round(), daysAgo: 0, jobId: job.id));
-    }
-    notifyListeners();
-  }
-
-  int get earningsWeek => 18500 + proJobs.where((j) => j.status == JobStatus.completed).fold(0, (s, j) => s + (j.price ?? 0));
-
-  /// Wallet balance: everything earned minus what was already cashed out,
-  /// on top of an opening balance from before the seeded history.
-  int get balance => 6400 + payouts.fold(0, (s, p) => s + p.amount);
-
-  Future<void> cashOut() async {
-    final amount = balance;
-    if (amount <= 0) return;
-    await Future.delayed(const Duration(milliseconds: 1100));
-    payouts.insert(0, Payout(label: 'Cash out to CCP •• 4471', amount: -amount, daysAgo: 0, cashOut: true));
-    notifyListeners();
-  }
-
-  // ---------- m'lem sign-up ----------
-
-  /// The application this device submitted, if any. It sits in the admin
-  /// Verify queue like any other request.
-  VerificationRequest? myApplication;
-
-  Future<void> submitApplication({
-    required String name,
-    required Trade trade,
-    required String commune,
-    required int years,
-    required String nin,
-    required List<String> documents,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 1200));
-    final c = Craftsman(
-      id: 'c-new',
-      name: name,
-      trade: trade,
-      commune: commune,
-      wilaya: 'Alger',
-      location: clientHome,
-      years: years,
-      hourly: 1500,
-      callout: 1000,
-      verified: false,
-      available: false,
-      jobsDone: 0,
-      bio: '',
-      photos: const [],
-      reviews: [],
-      skills: const [],
-      wilayas: const ['Alger'],
-      responseMins: 15,
-      certificates: documents.where((d) => !d.startsWith('National ID')).toList(),
-    );
-    myApplication = VerificationRequest(craftsman: c, nin: nin, submittedHoursAgo: 0, documents: documents, uploaded: true);
-    verifications.insert(0, myApplication!);
-    notifyListeners();
-  }
-
-  // ---------- admin ----------
-
-  void decide(VerificationRequest v, bool approve) {
-    v.decision = approve;
-    v.craftsman.verified = approve;
-    notifyListeners();
-  }
-
-  void resolveFlag(Flag f, {required bool removeContent}) {
-    f.resolved = true;
-    if (removeContent && f.review != null) f.review!.flagged = true;
-    notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _alertTimer?.cancel();
-    _tripTimer?.cancel();
-    super.dispose();
-  }
+  Future<void> addReview(ServiceRequest r, int stars, String comment) => _run(() async {
+    await reviews.add(request: r, author: user!, stars: stars, comment: comment);
+    await requests.markReviewed(r.id);
+  });
 }

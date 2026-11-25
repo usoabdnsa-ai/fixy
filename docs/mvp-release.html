@@ -1,0 +1,150 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Fixy · Release of MVP</title>
+<style>
+@font-face{font-family:Inter;src:url(../assets/fonts/Inter-Regular.ttf);font-weight:400}
+@font-face{font-family:Inter;src:url(../assets/fonts/Inter-SemiBold.ttf);font-weight:600}
+@font-face{font-family:Inter;src:url(../assets/fonts/Inter-Bold.ttf);font-weight:700}
+@font-face{font-family:InterDisplay;src:url(../assets/fonts/InterDisplay-Bold.ttf);font-weight:700}
+@page{size:A4;margin:15mm 15mm}
+:root{--navy:#0D1B2A;--turq:#00C49A;--turqText:#00785E;--wash:#E3F8F2;--soft:#55657A;--line:#E3E8EE}
+body{font:10.2pt/1.5 Inter,Arial,sans-serif;color:var(--navy);margin:0}
+h1{font:700 26pt/1.1 InterDisplay,Inter;margin:0}
+h2{font:700 14pt InterDisplay,Inter;margin:7mm 0 2.5mm;padding-bottom:1.5mm;border-bottom:2px solid var(--turq);page-break-after:avoid}
+h3{font-size:11pt;margin:4mm 0 1.5mm;page-break-after:avoid}
+p{margin:1.5mm 0}
+.cover{background:var(--navy);color:#fff;border-radius:14px;padding:9mm 10mm;margin-bottom:6mm;display:flex;gap:8mm;align-items:center}
+.cover .tag{color:var(--turq);font-weight:700;letter-spacing:.06em;font-size:9pt;text-transform:uppercase}
+.cover p{color:#B7C4D3;margin:2mm 0 0}
+.logo{width:64px;height:64px;flex:none}
+table{width:100%;border-collapse:collapse;font-size:9.2pt;margin:2mm 0}
+tr{page-break-inside:avoid}
+th,td{border:1px solid var(--line);padding:4px 7px;text-align:left;vertical-align:top}
+th{background:#F5F7F9}
+.ok{color:var(--turqText);font-weight:700;white-space:nowrap}
+.box{border:1px solid var(--line);border-radius:10px;padding:3mm 4mm;margin:3mm 0;page-break-inside:avoid;background:#F8FAFB}
+.box.t{background:var(--wash);border-color:#BDEBDD}
+code{font:8.8pt Consolas,monospace;background:#F1F4F2;padding:0 3px;border-radius:3px}
+pre{font:8.6pt/1.45 Consolas,monospace;background:#F5F7F9;border:1px solid var(--line);border-radius:8px;padding:3mm;white-space:pre-wrap;page-break-inside:avoid}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm 3mm}
+.grid figure{margin:0;page-break-inside:avoid}
+.grid img{width:100%;border-radius:8px;border:1px solid var(--line)}
+.grid figcaption{font-size:8.3pt;color:var(--soft);margin-top:1mm}
+.grid figcaption b{color:var(--navy)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+.pb{page-break-before:always}
+ul{margin:1mm 0;padding-left:5mm} li{margin:.6mm 0}
+.muted{color:var(--soft)}
+</style></head><body>
+
+<div class="cover">
+<svg class="logo" viewBox="0 0 100 100"><rect width="100" height="100" rx="24" fill="#00C49A"/><g transform="translate(14 14) scale(.72)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 47 L50 22 L80 47 M29 41 L29 77 L71 77 L71 41" stroke="#0D1B2A" stroke-width="8"/><line x1="40" y1="69" x2="54.5" y2="54.5" stroke="#0D1B2A" stroke-width="7.5"/><path d="M67.73 51.07 A8 8 0 1 1 57.93 41.27" stroke="#0D1B2A" stroke-width="7.5"/></g></svg>
+<div>
+<div class="tag">Mobile App Main Project · Release of MVP</div>
+<h1>Fixy</h1>
+<p>Vos artisans de confiance en Algérie. An Android app that connects households with local plumbers, electricians, painters and other artisans.</p>
+<p>BOUBAYA Mohamed (leader) · MESLEM Youcef · DERGHAL Arslane Yassine · G10</p>
+</div>
+</div>
+
+<h2>1. What this release delivers</h2>
+<p>The MVP is a <b>working</b> Flutter app, not a mock-up: accounts, provider profiles, service requests, request statuses, favourites and reviews are real data, saved on the phone and kept after the app is closed. It implements the <b>20 screens</b> of the validated specification (24 Oct 2026) and its three core rules.</p>
+<div class="two">
+<div class="box t"><b>Try it in 1 minute</b><br>Install the APK (or <code>flutter run</code>), tap <b>Commencer</b>, then on the login screen tap <b>Client</b> under "Comptes de démonstration" and <b>Se connecter</b>. Password for all demo accounts: <code>fixy1234</code>.</div>
+<div class="box"><b>Full loop on one phone</b><br>As the client (0550 11 22 33), request Karim Benali (plombier). Log out, log in as Karim (0661 23 45 01), <b>Accepter</b>, then <b>Terminée</b>. Log back in as the client and <b>Évaluer</b>: his rating updates.</div>
+</div>
+
+<h2>2. Specification coverage</h2>
+<table>
+<tr><th>#</th><th>Feature (spec §4.2)</th><th>What works</th><th>Status</th></tr>
+<tr><td>F1</td><td>Splash, onboarding &amp; auth</td><td>Animated splash, 3 swipeable slides, sign-up (name, phone, optional e-mail, password) and login by phone or e-mail, Client / Prestataire choice. Input validated (Algerian mobile format, password ≥ 6).</td><td class="ok">Delivered</td></tr>
+<tr><td>F2</td><td>Client home &amp; categories</td><td>Greeting, location selector from saved addresses, search bar + filter button, the 8 trades, popular artisans, 4-tab navigation.</td><td class="ok">Delivered</td></tr>
+<tr><td>F3</td><td>Search results &amp; filters</td><td>Cards with photo or default avatar, trade, rating, commune, phone, "à partir de" price in DA, Appeler / Voir le profil. Filters: trade, wilaya, communes, minimum rating 4.0+ to 4.8+, DA price slider, availability (today, week-end, emergencies), 5 sorts. Accent-insensitive text search.</td><td class="ok">Delivered</td></tr>
+<tr><td>F4</td><td>Provider profile &amp; calling</td><td>Photo, verified badge, rating, direct number card (copy), bio, coverage, DA rates, reviews, sticky Appeler + Demander un service. Appeler opens the native dialer.</td><td class="ok">Delivered</td></tr>
+<tr><td>F5</td><td>Request form &amp; confirmation</td><td>Service from the provider's list, description, address (saved addresses or typed), date and time pickers, optional problem photo (camera / gallery). Confirmation with summary and Appeler le prestataire.</td><td class="ok">Delivered</td></tr>
+<tr><td>F6</td><td>My requests &amp; favourites</td><td>4 status badges with filter pills, actions Appeler / Annuler / Détails / Évaluer, request details screen. Favourites (heart on cards and profile).</td><td class="ok">Delivered</td></tr>
+<tr><td>F7</td><td>Ratings &amp; reviews</td><td>5-star selector, written feedback, Envoyer mon avis. Reviews page with average and 5→1 distribution bars. One review per completed request.</td><td class="ok">Delivered</td></tr>
+<tr><td>F8</td><td>Provider registration &amp; edit</td><td>Ajouter / Modifier la photo (camera or gallery), name, phone, trade, wilaya + commune + extra communes covered, services &amp; DA rates (add / remove), experience, availability.</td><td class="ok">Delivered</td></tr>
+<tr><td>F9</td><td>Provider dashboard &amp; requests</td><td>Photo, profile completion bar (computed from the real profile), 2×2 counters, availability switch, request preview. Manage screen: problem details and photo, Accepter / Refuser, Appeler le client once accepted, mark as done.</td><td class="ok">Delivered</td></tr>
+<tr><td>F10</td><td>Profile &amp; settings</td><td>Profile card with editable info, saved addresses (Domicile, Parents) add / edit / delete, notification switches, account section, Se déconnecter.</td><td class="ok">Delivered</td></tr>
+</table>
+
+<h3>Core rules</h3>
+<table>
+<tr><th>Rule</th><th>How the MVP follows it</th></tr>
+<tr><td>A · No in-app chat</td><td>No chat screen anywhere. Every provider card and profile shows the phone number and an <b>Appeler</b> button (<code>url_launcher</code>, <code>tel:</code> scheme). The provider calls the client the same way.</td></tr>
+<tr><td>B · Provider photos</td><td><code>image_picker</code> with Appareil photo / Galerie on registration and edit. Photos are resized before saving. A default silhouette is shown when there is none.</td></tr>
+<tr><td>C · Simple requests</td><td>One form, no checkout. Prices are indicative, and payment happens directly with the artisan.</td></tr>
+</table>
+<p class="muted">Excluded, as in spec §4.3: in-app chat, online payment, live GPS tracking, iOS / desktop.</p>
+
+<h2 class="pb">3. Architecture</h2>
+<p>The spec's technical approach asks for "dynamic data models decoupled from UI widgets" and a "service layer prepared for database integration". The MVP is built that way:</p>
+<pre>screens (20)  ──▶  AppState (ChangeNotifier)  ──▶  services (interfaces)            ──▶  LocalStore
+                                                    AuthService, ProviderService,         shared_preferences
+                                                    RequestService, ReviewService,        (JSON on the phone)
+                                                    FavoriteService
+                                                    └ Local* implementations today
+                                                    └ database implementations in Phase 5</pre>
+<ul>
+<li><b>Models</b> (<code>lib/data/models.dart</code>): <code>AppUser</code>, <code>Provider</code>, <code>ServiceRate</code>, <code>ServiceRequest</code>, <code>Review</code>, <code>SavedAddress</code>, each with <code>toJson</code> / <code>fromJson</code>, ready for an API.</li>
+<li><b>Business rules live in the services</b>, not in screens: phone and price validation, who may accept or cancel what, one review per request.</li>
+<li><b>Phase 5</b> swaps the <code>Local*</code> classes for database-backed ones with the same interfaces. No screen changes.</li>
+<li><b>Security:</b> passwords are stored only as SHA-256 hashes. Server-side authentication comes with the backend.</li>
+</ul>
+
+<h3>Request life cycle (the 4 statuses)</h3>
+<svg viewBox="0 0 640 150" width="100%" style="max-height:44mm;font-family:Inter,Arial">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#55657A"/></marker></defs>
+<g stroke="#55657A" stroke-width="1.5" fill="none" marker-end="url(#a)"><path d="M150 40 H238"/><path d="M360 40 H448"/><path d="M90 62 Q90 118 238 120"/><path d="M300 62 V98"/></g>
+<g font-size="12.5" font-weight="700" text-anchor="middle">
+<rect x="30" y="18" width="120" height="44" rx="10" fill="#FFF3DC" stroke="#9A6100"/><text x="90" y="45" fill="#9A6100">En attente</text>
+<rect x="240" y="18" width="120" height="44" rx="10" fill="#E6EEFC" stroke="#1F5FD1"/><text x="300" y="45" fill="#1F5FD1">Acceptée</text>
+<rect x="450" y="18" width="120" height="44" rx="10" fill="#E4F5EB" stroke="#14804A"/><text x="510" y="45" fill="#14804A">Terminée</text>
+<rect x="240" y="100" width="120" height="40" rx="10" fill="#FDECEC" stroke="#C62828"/><text x="300" y="125" fill="#C62828">Annulée</text></g>
+<g font-size="10.5" fill="#55657A" text-anchor="middle"><text x="194" y="32">accepter</text><text x="404" y="32">terminer</text>
+<text x="30" y="132" text-anchor="start">annuler (client)</text><text x="30" y="145" text-anchor="start">refuser (artisan)</text><text x="308" y="84" text-anchor="start">annuler (client)</text>
+<text x="510" y="80">puis : Évaluer</text><text x="510" y="93">(client, une fois)</text></g>
+</svg>
+
+<h2>4. Testing</h2>
+<p><code>flutter test</code> runs <b>15 automated tests</b> on the service layer. All pass:</p>
+<ul>
+<li>Accounts: sign-up → account type → login; wrong password refused; password never stored in clear; invalid or duplicate phone refused.</li>
+<li>Requests: En attente → Acceptée → Terminée → one review; no review before Terminée; refusal → Annulée and nothing more possible; client cancel; a finished request can't be cancelled; a provider can't accept another provider's request; past date or empty description refused.</li>
+<li>Search: trade + wilaya, minimum rating, maximum price, accent-insensitive text ("electricien hydra"), sort by price.</li>
+<li>Favourites add / remove, data surviving a restart, provider price must be &gt; 0.</li>
+</ul>
+<p>Every one of the 20 screens was also opened and checked in a phone-sized browser. Calling and the camera use Android features, and were set up for Android 11+ (<code>&lt;queries&gt;</code> in the manifest).</p>
+
+<h2>5. Next steps (Sprint 1 and final)</h2>
+<table>
+<tr><th>Next</th><th>Why</th></tr>
+<tr><td>Connect the service layer to a database (spec Phase 5)</td><td>So a client's request reaches the artisan's own phone. Today both roles share one device's data.</td></tr>
+<tr><td>Verified-badge process for artisans</td><td>Today the badge comes from the seed data.</td></tr>
+<tr><td>Push notifications for new requests and answers</td><td>The settings switches are saved but nothing is sent yet.</td></tr>
+<tr><td>Testing on several physical Android devices and a usability test</td><td>Spec "Data Layer &amp; QA Testing".</td></tr>
+</table>
+
+<h2 class="pb">6. Screens</h2>
+<div class="grid">
+<figure><img src="screens/01-splash.png"><figcaption><b>1</b> Splash</figcaption></figure>
+<figure><img src="screens/02-onboarding.png"><figcaption><b>2</b> Onboarding</figcaption></figure>
+<figure><img src="screens/03-auth.png"><figcaption><b>3</b> S'inscrire / Se connecter</figcaption></figure>
+<figure><img src="screens/04-type.png"><figcaption><b>4</b> Account type</figcaption></figure>
+<figure><img src="screens/05-home.png"><figcaption><b>5</b> Client home</figcaption></figure>
+<figure><img src="screens/06-categories.png"><figcaption><b>6</b> Categories</figcaption></figure>
+<figure><img src="screens/07-results.png"><figcaption><b>7</b> Search results</figcaption></figure>
+<figure><img src="screens/08-filters.png"><figcaption><b>8</b> Filters</figcaption></figure>
+<figure><img src="screens/09-profile.png"><figcaption><b>9</b> Provider profile</figcaption></figure>
+<figure><img src="screens/10-request.png"><figcaption><b>10</b> Request a service</figcaption></figure>
+<figure><img src="screens/11-confirm.png"><figcaption><b>11</b> Confirmation</figcaption></figure>
+<figure><img src="screens/12-requests.png"><figcaption><b>12</b> My requests</figcaption></figure>
+<figure><img src="screens/13-favorites.png"><figcaption><b>13</b> Favourites</figcaption></figure>
+<figure><img src="screens/14-review.png"><figcaption><b>14</b> Rate the service</figcaption></figure>
+<figure><img src="screens/15-register.png"><figcaption><b>15</b> Provider registration</figcaption></figure>
+<figure><img src="screens/16-dashboard.png"><figcaption><b>16</b> Provider dashboard</figcaption></figure>
+<figure><img src="screens/17-manage.png"><figcaption><b>17</b> Manage requests</figcaption></figure>
+<figure><img src="screens/18-edit.png"><figcaption><b>18</b> Edit provider profile</figcaption></figure>
+<figure><img src="screens/19-proreviews.png"><figcaption><b>19</b> Provider reviews</figcaption></figure>
+<figure><img src="screens/20-settings.png"><figcaption><b>20</b> Profile &amp; settings</figcaption></figure>
+</div>
+</body></html>

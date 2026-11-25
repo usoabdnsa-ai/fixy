@@ -6,74 +6,46 @@ import 'screens/shared/splash.dart';
 import 'state/app_state.dart';
 import 'theme/theme.dart';
 import 'theme/tokens.dart';
-import 'widgets/kit.dart';
 
-// Photo credits (CC0 / public domain via Openverse, attribution not required):
-// see assets/CREDITS.txt.
-
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
+    const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       systemNavigationBarColor: C.card,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  if (Uri.base.queryParameters['theme'] == 'dark') C.light.value = false;
-  // Colors are read from C at build time, so a theme flip just needs every
-  // element (including cached route pages) to build again.
-  C.light.addListener(() {
-    void dirty(Element e) {
-      e.markNeedsBuild();
-      e.visitChildren(dirty);
-    }
-
-    WidgetsBinding.instance.rootElement?.visitChildren(dirty);
-  });
-  runApp(
-    ChangeNotifierProvider(create: (_) => AppState(), child: const FixyApp()),
-  );
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  final state = await AppState.load();
+  runApp(ChangeNotifierProvider.value(value: state, child: const FixyApp()));
 }
 
 class FixyApp extends StatelessWidget {
   const FixyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: C.light,
-      builder: (context, light, _) => MaterialApp(
-        title: 'Fixy',
-        debugShowCheckedModeBanner: false,
-        theme: buildTheme(),
-        // On web/desktop, frame the app at phone width so the prototype reads as mobile.
-        builder: (context, child) {
-          final w = MediaQuery.sizeOf(context).width;
-          if (w <= 520) return child!;
-          return ColoredBox(
-            color: const Color(0xFFE2E8F0),
-            child: Center(
-              child: Container(
-                width: 420,
-                height: MediaQuery.sizeOf(context).height,
-                decoration: BoxDecoration(boxShadow: lift),
-                child: MediaQuery(
-                  data: MediaQuery.of(context).copyWith(
-                    size: Size(416, MediaQuery.sizeOf(context).height),
-                  ),
-                  child: child!,
-                ),
-              ),
-            ),
-          );
-        },
-        home: const SplashScreen(),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'Fixy',
+    debugShowCheckedModeBanner: false,
+    theme: buildTheme(),
+    locale: const Locale('fr', 'DZ'),
+    // In a desktop browser, frame the app at phone width (the product is Android-only).
+    builder: (context, child) {
+      final mq = MediaQuery.of(context);
+      if (mq.size.width <= 520) return child!;
+      return ColoredBox(
+        color: const Color(0xFFDDE3E9),
+        child: Center(
+          child: Container(
+            width: 412,
+            decoration: const BoxDecoration(boxShadow: lift),
+            child: MediaQuery(data: mq.copyWith(size: Size(412, mq.size.height)), child: child!),
+          ),
+        ),
+      );
+    },
+    home: const SplashScreen(),
+  );
 }
-
-/// Top-level flow route: a volt band wipes the new screen in.
-Route<T> fadeRoute<T>(Widget page) => wipeRoute<T>(page);

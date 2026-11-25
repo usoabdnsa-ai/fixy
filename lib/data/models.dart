@@ -1,274 +1,352 @@
 import 'package:flutter/widgets.dart';
-import 'package:latlong2/latlong.dart';
 
 import '../widgets/icons.dart';
 
-enum Role { client, craftsman, admin }
+/// The 8 trades from the specification (section 4.2, F2).
+enum Category {
+  plombier('Plombier', 'Plomberie', PhosphorIconsBold.pipeWrench),
+  electricien('Électricien', 'Électricité', PhosphorIconsBold.lightning),
+  macon('Maçon', 'Maçonnerie', PhosphorIconsBold.wall),
+  peintre('Peintre', 'Peinture', PhosphorIconsBold.paintRoller),
+  nettoyeur('Nettoyeur', 'Nettoyage', PhosphorIconsBold.broom),
+  menuisier('Menuisier', 'Menuiserie', PhosphorIconsBold.hammer),
+  climatisation('Climatisation', 'Climatisation', PhosphorIconsBold.snowflake),
+  serrurier('Serrurier', 'Serrurerie', PhosphorIconsBold.key);
 
-enum Trade {
-  plumbing('Plumbing', 'Plombier', PhosphorIconsBold.pipeWrench),
-  electrical('Electrical', 'Électricien', PhosphorIconsBold.lightning),
-  hvac('AC repair', 'Climatisation', PhosphorIconsBold.snowflake),
-  mechanic('Mechanic', 'Mécanicien', PhosphorIconsBold.car),
-  carpentry('Carpentry', 'Menuisier', PhosphorIconsBold.hammer),
-  painting('Painting', 'Peintre', PhosphorIconsBold.paintRoller);
+  const Category(this.label, this.domain, this.icon);
 
-  const Trade(this.label, this.local, this.icon);
+  /// The person: "Plombier".
   final String label;
-  final String local;
+
+  /// The field: "Plomberie".
+  final String domain;
   final IconData icon;
+
+  static Category byName(String n) => Category.values.firstWhere((c) => c.name == n, orElse: () => Category.plombier);
 }
 
-enum Urgency {
-  now('Right now', 'Leak, outage, danger'),
-  today('Today', 'Within a few hours'),
-  week('This week', 'Can wait, want quotes');
+enum Role { client, prestataire }
 
-  const Urgency(this.label, this.hint);
+/// The 4 request statuses from the specification.
+enum RequestStatus {
+  enAttente('En attente'),
+  acceptee('Acceptée'),
+  terminee('Terminée'),
+  annulee('Annulée');
+
+  const RequestStatus(this.label);
   final String label;
-  final String hint;
+
+  static RequestStatus byName(String n) => RequestStatus.values.firstWhere((s) => s.name == n, orElse: () => RequestStatus.enAttente);
 }
 
-enum JobStatus {
-  pending('Pending'),
-  quoted('Quotes in'),
-  accepted('Accepted'),
-  inProgress('In progress'),
-  completed('Completed'),
-  cancelled('Cancelled');
+/// Who closed a request: the client (Annuler) or the provider (Refuser).
+enum CancelledBy { client, prestataire }
 
-  const JobStatus(this.label);
-  final String label;
+/// A user account. Providers additionally have a [Provider] profile with the same id.
+class AppUser {
+  AppUser({
+    required this.id,
+    required this.name,
+    required this.phone,
+    this.email,
+    required this.passwordHash,
+    required this.role,
+    this.addresses = const [],
+    this.notifyRequests = true,
+    this.notifyPromos = false,
+  });
+
+  final String id;
+  String name;
+  String phone;
+  String? email;
+  final String passwordHash;
+  Role? role; // null until the account type is chosen (screen 4)
+  List<SavedAddress> addresses;
+  bool notifyRequests;
+  bool notifyPromos;
+
+  String get firstName => name.trim().split(' ').first;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'phone': phone,
+    'email': email,
+    'passwordHash': passwordHash,
+    'role': role?.name,
+    'addresses': addresses.map((a) => a.toJson()).toList(),
+    'notifyRequests': notifyRequests,
+    'notifyPromos': notifyPromos,
+  };
+
+  factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
+    id: j['id'],
+    name: j['name'],
+    phone: j['phone'],
+    email: j['email'],
+    passwordHash: j['passwordHash'],
+    role: j['role'] == null ? null : Role.values.byName(j['role']),
+    addresses: [for (final a in (j['addresses'] as List? ?? [])) SavedAddress.fromJson(a)],
+    notifyRequests: j['notifyRequests'] ?? true,
+    notifyPromos: j['notifyPromos'] ?? false,
+  );
+}
+
+class SavedAddress {
+  SavedAddress({required this.label, required this.line, required this.commune, required this.wilaya});
+  String label; // "Domicile", "Parents"
+  String line;
+  String commune;
+  String wilaya;
+
+  String get short => '$commune, $wilaya';
+  String get full => '$line, $commune, $wilaya';
+
+  Map<String, dynamic> toJson() => {'label': label, 'line': line, 'commune': commune, 'wilaya': wilaya};
+  factory SavedAddress.fromJson(Map<String, dynamic> j) =>
+      SavedAddress(label: j['label'], line: j['line'], commune: j['commune'], wilaya: j['wilaya']);
+}
+
+/// One priced service on a provider profile, in Algerian dinars.
+class ServiceRate {
+  ServiceRate({required this.name, required this.priceDa});
+  String name;
+  int priceDa;
+
+  Map<String, dynamic> toJson() => {'name': name, 'priceDa': priceDa};
+  factory ServiceRate.fromJson(Map<String, dynamic> j) => ServiceRate(name: j['name'], priceDa: j['priceDa']);
+}
+
+/// A provider ("prestataire") profile.
+class Provider {
+  Provider({
+    required this.id,
+    required this.name,
+    required this.phone,
+    required this.category,
+    required this.wilaya,
+    required this.commune,
+    this.coverage = const [],
+    this.bio = '',
+    this.yearsExperience = 0,
+    this.services = const [],
+    this.photo,
+    this.verified = false,
+    this.available = true,
+    this.availableWeekend = false,
+    this.urgent = false,
+  });
+
+  final String id;
+  String name;
+  String phone;
+  Category category;
+  String wilaya;
+  String commune;
+
+  /// Extra communes covered, besides [commune].
+  List<String> coverage;
+  String bio;
+  int yearsExperience;
+  List<ServiceRate> services;
+
+  /// Either an asset path ("assets/...") or base64 JPEG bytes uploaded by the provider.
+  String? photo;
+  bool verified;
+  bool available; // available today
+  bool availableWeekend;
+  bool urgent; // takes emergencies
+
+  /// Lowest service price: the "à partir de" price on cards.
+  int get fromPrice => services.isEmpty ? 0 : services.map((s) => s.priceDa).reduce((a, b) => a < b ? a : b);
+
+  String get initials => name.trim().split(RegExp(r'\s+')).take(2).map((p) => p[0]).join().toUpperCase();
+
+  /// Share of the profile that is filled in, for the dashboard bar (screen 16).
+  double get completion {
+    var done = 0;
+    if (photo != null) done++;
+    if (bio.trim().length >= 30) done++;
+    if (services.isNotEmpty) done++;
+    if (coverage.isNotEmpty) done++;
+    if (yearsExperience > 0) done++;
+    return (3 + done) / 8; // name, phone and trade are always set
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'phone': phone,
+    'category': category.name,
+    'wilaya': wilaya,
+    'commune': commune,
+    'coverage': coverage,
+    'bio': bio,
+    'yearsExperience': yearsExperience,
+    'services': services.map((s) => s.toJson()).toList(),
+    'photo': photo,
+    'verified': verified,
+    'available': available,
+    'availableWeekend': availableWeekend,
+    'urgent': urgent,
+  };
+
+  factory Provider.fromJson(Map<String, dynamic> j) => Provider(
+    id: j['id'],
+    name: j['name'],
+    phone: j['phone'],
+    category: Category.byName(j['category']),
+    wilaya: j['wilaya'],
+    commune: j['commune'],
+    coverage: List<String>.from(j['coverage'] ?? const []),
+    bio: j['bio'] ?? '',
+    yearsExperience: j['yearsExperience'] ?? 0,
+    services: [for (final s in (j['services'] as List? ?? [])) ServiceRate.fromJson(s)],
+    photo: j['photo'],
+    verified: j['verified'] ?? false,
+    available: j['available'] ?? true,
+    availableWeekend: j['availableWeekend'] ?? false,
+    urgent: j['urgent'] ?? false,
+  );
+}
+
+class ServiceRequest {
+  ServiceRequest({
+    required this.id,
+    required this.clientId,
+    required this.clientName,
+    required this.clientPhone,
+    required this.providerId,
+    required this.service,
+    required this.description,
+    required this.address,
+    required this.scheduledAt,
+    required this.createdAt,
+    this.photo,
+    this.status = RequestStatus.enAttente,
+    this.cancelledBy,
+    this.reviewed = false,
+  });
+
+  final String id;
+  final String clientId;
+  final String clientName;
+  final String clientPhone;
+  final String providerId;
+  final String service;
+  final String description;
+  final String address;
+  final DateTime scheduledAt;
+  final DateTime createdAt;
+
+  /// Optional problem photo, base64 JPEG.
+  final String? photo;
+  RequestStatus status;
+  CancelledBy? cancelledBy;
+  bool reviewed;
+
+  /// "Refusée" is shown as a note on an Annulée request, so the spec's 4 badges stay.
+  bool get refused => status == RequestStatus.annulee && cancelledBy == CancelledBy.prestataire;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'clientId': clientId,
+    'clientName': clientName,
+    'clientPhone': clientPhone,
+    'providerId': providerId,
+    'service': service,
+    'description': description,
+    'address': address,
+    'scheduledAt': scheduledAt.toIso8601String(),
+    'createdAt': createdAt.toIso8601String(),
+    'photo': photo,
+    'status': status.name,
+    'cancelledBy': cancelledBy?.name,
+    'reviewed': reviewed,
+  };
+
+  factory ServiceRequest.fromJson(Map<String, dynamic> j) => ServiceRequest(
+    id: j['id'],
+    clientId: j['clientId'],
+    clientName: j['clientName'],
+    clientPhone: j['clientPhone'],
+    providerId: j['providerId'],
+    service: j['service'],
+    description: j['description'],
+    address: j['address'],
+    scheduledAt: DateTime.parse(j['scheduledAt']),
+    createdAt: DateTime.parse(j['createdAt']),
+    photo: j['photo'],
+    status: RequestStatus.byName(j['status']),
+    cancelledBy: j['cancelledBy'] == null ? null : CancelledBy.values.byName(j['cancelledBy']),
+    reviewed: j['reviewed'] ?? false,
+  );
 }
 
 class Review {
   Review({
-    required this.author,
-    required this.punctuality,
-    required this.pricing,
-    required this.quality,
-    required this.text,
-    required this.daysAgo,
-    this.flagged = false,
-  });
-  final String author;
-  final int punctuality;
-  final int pricing;
-  final int quality;
-  final String text;
-  final int daysAgo;
-  bool flagged;
-  double get average => (punctuality + pricing + quality) / 3;
-}
-
-class Craftsman {
-  Craftsman({
     required this.id,
-    required this.name,
-    required this.trade,
-    required this.commune,
-    required this.wilaya,
-    required this.location,
-    required this.years,
-    required this.hourly,
-    required this.callout,
-    required this.verified,
-    required this.available,
-    required this.jobsDone,
-    required this.bio,
-    required this.photos,
-    required this.reviews,
-    required this.skills,
-    required this.wilayas,
-    required this.responseMins,
-    this.certificates = const [],
+    required this.providerId,
+    required this.authorName,
+    required this.stars,
+    required this.comment,
+    required this.createdAt,
+    this.requestId,
+    this.authorId,
   });
+
   final String id;
-  final String name;
-  final Trade trade;
-  final String commune;
-  final String wilaya;
-  final LatLng location;
-  final int years;
-  final int hourly; // DZD
-  final int callout; // DZD flat fee to come out
-  bool verified;
-  bool available;
-  final int jobsDone;
-  final String bio;
-  final List<String> photos;
-  final List<Review> reviews;
-  final List<String> skills;
-  final List<String> wilayas;
-  final int responseMins;
-  final List<String> certificates;
+  final String providerId;
+  final String? requestId;
+  final String? authorId;
+  final String authorName;
+  final int stars; // 1..5
+  final String comment;
+  final DateTime createdAt;
 
-  String get initials => name.split(' ').take(2).map((p) => p[0]).join();
-  String get firstName => name.split(' ').first;
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'providerId': providerId,
+    'requestId': requestId,
+    'authorId': authorId,
+    'authorName': authorName,
+    'stars': stars,
+    'comment': comment,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
-  double get rating {
-    final visible = reviews.where((r) => !r.flagged).toList();
-    if (visible.isEmpty) return 0;
-    return visible.map((r) => r.average).reduce((a, b) => a + b) / visible.length;
-  }
-
-  double sub(int Function(Review r) pick) {
-    final visible = reviews.where((r) => !r.flagged).toList();
-    if (visible.isEmpty) return 0;
-    return visible.map(pick).reduce((a, b) => a + b) / visible.length;
-  }
+  factory Review.fromJson(Map<String, dynamic> j) => Review(
+    id: j['id'],
+    providerId: j['providerId'],
+    requestId: j['requestId'],
+    authorId: j['authorId'],
+    authorName: j['authorName'],
+    stars: j['stars'],
+    comment: j['comment'],
+    createdAt: DateTime.parse(j['createdAt']),
+  );
 }
 
-class Quote {
-  Quote({required this.craftsman, required this.amount, required this.eta, required this.note});
-  final Craftsman craftsman;
-  final int amount;
-  final String eta;
-  final String note;
+/// Average and 5→1 star counts for a provider (screen 19).
+class RatingSummary {
+  RatingSummary(List<Review> reviews)
+    : count = reviews.length,
+      average = reviews.isEmpty ? 0 : reviews.map((r) => r.stars).reduce((a, b) => a + b) / reviews.length,
+      byStars = {for (var s = 5; s >= 1; s--) s: reviews.where((r) => r.stars == s).length};
+  final int count;
+  final double average;
+  final Map<int, int> byStars;
 }
 
-class Message {
-  Message({required this.fromMe, required this.text, required this.time, this.system = false});
-  final bool fromMe;
-  final String text;
-  final String time;
-  final bool system;
-}
+/// Wilayas and communes used in the MVP (Alger, Blida, Oran, Constantine, Tizi Ouzou).
+const Map<String, List<String>> wilayas = {
+  'Alger': ['Alger Centre', 'Bab Ezzouar', 'Hydra', 'Kouba', 'El Biar', 'Bir Mourad Raïs', 'Chéraga', 'Dar El Beïda', 'Bordj El Kiffan', 'Ben Aknoun'],
+  'Blida': ['Blida', 'Boufarik', 'Ouled Yaïch', 'Beni Mered'],
+  'Oran': ['Oran', 'Bir El Djir', 'Es Sénia'],
+  'Constantine': ['Constantine', 'El Khroub', 'Ali Mendjeli'],
+  'Tizi Ouzou': ['Tizi Ouzou', 'Draâ Ben Khedda', 'Azazga'],
+};
 
-/// Where the client is. The home screen's location selector picks one.
-class Address {
-  const Address(this.label, this.line, this.commune, this.location);
-  final String label;
-  final String line;
-  final String commune;
-  final LatLng location;
-}
-
-/// A bookable window for a scheduled job.
-class Slot {
-  const Slot({required this.day, required this.start, required this.end, this.taken = false});
-  final DateTime day;
-  final int start; // hour, 24h
-  final int end;
-  final bool taken;
-  String get hours => '${start.toString().padLeft(2, '0')}:00–${end.toString().padLeft(2, '0')}:00';
-}
-
-/// What the (mock) photo model thinks is wrong.
-class Diagnosis {
-  const Diagnosis({required this.issue, required this.confidence, required this.minutes, required this.parts, required this.partsCost, required this.title});
-  final String issue;
-  final double confidence; // 0..1
-  final int minutes; // labour estimate
-  final String parts;
-  final int partsCost; // DZD
-  final String title; // suggested job title
-}
-
-/// One line of the upfront price breakdown.
-class PriceLine {
-  const PriceLine(this.label, this.low, [int? high, this.note]) : high = high ?? low;
-  final String label;
-  final int low;
-  final int high;
-  final String? note;
-  bool get isRange => high != low;
-}
-
-/// Upfront estimate shown before posting. Quotes may land anywhere inside it;
-/// the accepted quote is the locked price.
-class PriceEstimate {
-  const PriceEstimate(this.lines);
-  final List<PriceLine> lines;
-  int get low => lines.fold(0, (s, l) => s + l.low);
-  int get high => lines.fold(0, (s, l) => s + l.high);
-}
-
-/// A m'lem on the way: a route and how far along it they are.
-class Trip {
-  Trip({required this.route, this.progress = 0});
-  final List<LatLng> route;
-  double progress; // 0..1 along the route
-  bool get arrived => progress >= 1;
-}
-
-/// A line in the m'lem's wallet.
-class Payout {
-  const Payout({required this.label, required this.amount, required this.daysAgo, this.jobId, this.cashOut = false});
-  final String label;
-  final int amount; // DZD, net of commission (negative for cash-outs)
-  final int daysAgo;
-  final String? jobId;
-  final bool cashOut;
-}
-
-class Job {
-  Job({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.trade,
-    required this.urgency,
-    required this.commune,
-    required this.location,
-    required this.status,
-    required this.postedMinsAgo,
-    required this.clientName,
-    this.photos = const [],
-    this.craftsman,
-    this.price,
-    List<Quote>? quotes,
-    List<Message>? messages,
-    this.rated = false,
-    this.budgetHint,
-    this.slot,
-    this.estimate,
-    this.diagnosis,
-    this.trip,
-  }) : quotes = quotes ?? [],
-       messages = messages ?? [];
-  final String id;
-  final String title;
-  final String description;
-  final Trade trade;
-  final Urgency urgency;
-  final String commune;
-  final LatLng location;
-  JobStatus status;
-  final int postedMinsAgo;
-  final String clientName;
-  final List<String> photos;
-  Craftsman? craftsman;
-  int? price;
-  final List<Quote> quotes;
-  final List<Message> messages;
-  bool rated;
-  final String? budgetHint;
-  final Slot? slot; // null = instant
-  final PriceEstimate? estimate;
-  final Diagnosis? diagnosis;
-  Trip? trip; // set while the m'lem is driving over
-}
-
-class VerificationRequest {
-  VerificationRequest({required this.craftsman, required this.nin, required this.submittedHoursAgo, required this.documents, this.decision, this.uploaded = false});
-  final Craftsman craftsman;
-  final String nin;
-  final int submittedHoursAgo;
-  final List<String> documents;
-  bool? decision;
-
-  /// True when the m'lem sent these from the in-app sign-up (photos attached).
-  final bool uploaded;
-}
-
-class Flag {
-  Flag({required this.kind, required this.subject, required this.reason, required this.reporter, required this.hoursAgo, this.review, this.resolved = false});
-  final String kind; // review, conduct, listing
-  final String subject;
-  final String reason;
-  final String reporter;
-  final int hoursAgo;
-  final Review? review;
-  bool resolved;
-}
+String wilayaOf(String commune) => wilayas.entries.firstWhere((e) => e.value.contains(commune), orElse: () => wilayas.entries.first).key;

@@ -1,38 +1,31 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'tokens.dart';
 
-/// Plus Jakarta Sans everywhere: friendly, modern, very legible.
-/// [figs] is for data (prices, times, distances, IDs): same face, tabular figures.
-TextStyle figs({double size = 12, FontWeight weight = FontWeight.w500, Color? color}) => GoogleFonts.plusJakartaSans(
-  fontSize: size + 1,
-  fontWeight: weight == FontWeight.w700 ? FontWeight.w600 : weight,
-  color: color ?? C.ink,
-  fontFeatures: const [FontFeature.tabularFigures()],
-);
+/// Inter everywhere (spec 4.4); Inter Display for big titles.
+const _inter = 'Inter';
 
-TextStyle display({double size = 28, Color? color, FontWeight weight = FontWeight.w700}) => GoogleFonts.plusJakartaSans(
-  // The old condensed face ran small; Jakarta is wide, so scale big sizes down a little.
-  fontSize: size > 30 ? size * .62 + 6 : size * .82,
-  fontWeight: weight == FontWeight.w800 ? FontWeight.w800 : FontWeight.w700,
-  color: color ?? C.ink,
-  height: 1.2,
-  letterSpacing: -.3,
-);
+TextStyle title({double size = 22, Color color = C.ink, FontWeight weight = FontWeight.w700}) =>
+    TextStyle(fontFamily: size >= 20 ? 'InterDisplay' : _inter, fontSize: size, fontWeight: weight, color: color, height: 1.2, letterSpacing: size >= 20 ? -.4 : -.1);
+
+TextStyle body({double size = 15, Color color = C.ink, FontWeight weight = FontWeight.w400, double height = 1.45}) =>
+    TextStyle(fontFamily: _inter, fontSize: size, fontWeight: weight, color: color, height: height);
+
+/// Prices, counts, dates: tabular figures so numbers line up.
+TextStyle figs({double size = 14, Color color = C.ink, FontWeight weight = FontWeight.w600}) =>
+    TextStyle(fontFamily: _inter, fontSize: size, fontWeight: weight, color: color, fontFeatures: const [FontFeature.tabularFigures()]);
 
 ThemeData buildTheme() {
   final base = ThemeData(
     useMaterial3: true,
-    brightness: C.isLight ? Brightness.light : Brightness.dark,
+    fontFamily: _inter,
     colorScheme: ColorScheme.fromSeed(
-      brightness: C.isLight ? Brightness.light : Brightness.dark,
-      seedColor: C.volt,
-      primary: C.volt,
-      onPrimary: C.onFill,
-      secondary: C.teal,
-      onSecondary: C.onFill,
+      seedColor: C.navy,
+      primary: C.navy,
+      onPrimary: C.white,
+      secondary: C.turq,
+      onSecondary: C.navy,
       surface: C.card,
       onSurface: C.ink,
       error: C.red,
@@ -43,59 +36,60 @@ ThemeData buildTheme() {
     highlightColor: Colors.transparent,
     dividerColor: C.line,
   );
-  final text = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(bodyColor: C.ink, displayColor: C.ink);
   return base.copyWith(
-    textTheme: text.copyWith(
-      bodyMedium: text.bodyMedium?.copyWith(fontSize: 15, height: 1.5),
-      bodySmall: text.bodySmall?.copyWith(fontSize: 13.5, color: C.inkSoft, height: 1.45),
-      titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
-    ),
+    textTheme: base.textTheme.apply(bodyColor: C.ink, displayColor: C.ink, fontFamily: _inter),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {TargetPlatform.android: CupertinoPageTransitionsBuilder(), TargetPlatform.iOS: CupertinoPageTransitionsBuilder()},
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: C.bg,
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: C.ink,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: TextStyle(fontFamily: 'InterDisplay', fontSize: 20, fontWeight: FontWeight.w700, color: C.ink),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: C.card,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      hintStyle: TextStyle(color: C.inkSoft),
-      counterStyle: TextStyle(color: C.inkSoft),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(R.md),
-        borderSide: BorderSide(color: C.line),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(R.md),
-        borderSide: BorderSide(color: C.line),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(R.md),
-        borderSide: BorderSide(color: C.volt, width: 1.5),
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+      hintStyle: const TextStyle(color: C.inkFaint, fontFamily: _inter),
+      labelStyle: const TextStyle(color: C.inkSoft, fontFamily: _inter),
+      floatingLabelStyle: const TextStyle(color: C.turqText, fontFamily: _inter, fontWeight: FontWeight.w600),
+      prefixIconColor: C.inkSoft,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(R.md), borderSide: const BorderSide(color: C.line)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(R.md), borderSide: const BorderSide(color: C.line)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(R.md), borderSide: const BorderSide(color: C.turq, width: 1.6)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(R.md), borderSide: const BorderSide(color: C.red)),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(R.md), borderSide: const BorderSide(color: C.red, width: 1.6)),
     ),
-    textSelectionTheme: TextSelectionThemeData(cursorColor: C.volt, selectionColor: C.volt.withValues(alpha: .25), selectionHandleColor: C.volt),
-    sliderTheme: SliderThemeData(
-      activeTrackColor: C.volt,
+    textSelectionTheme: TextSelectionThemeData(cursorColor: C.navy, selectionColor: C.turq.withValues(alpha: .3), selectionHandleColor: C.turq),
+    sliderTheme: const SliderThemeData(
+      activeTrackColor: C.turq,
       inactiveTrackColor: C.line,
-      thumbColor: C.volt,
+      thumbColor: C.navy,
       overlayColor: Colors.transparent,
-      trackHeight: 3,
+      trackHeight: 4,
+      valueIndicatorColor: C.navy,
     ),
     switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? C.onFill : C.card),
-      trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? C.volt : C.line),
+      thumbColor: WidgetStateProperty.all(C.white),
+      trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? C.turq : C.lineStrong),
       trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
     ),
     checkboxTheme: CheckboxThemeData(
-      fillColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? C.volt : Colors.transparent),
-      checkColor: WidgetStateProperty.all(C.onFill),
-      side: BorderSide(color: C.lineStrong, width: 1.5),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(R.sm)),
+      fillColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? C.navy : Colors.transparent),
+      checkColor: WidgetStateProperty.all(C.white),
+      side: const BorderSide(color: C.lineStrong, width: 1.5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
     ),
-    bottomSheetTheme: BottomSheetThemeData(backgroundColor: C.card, surfaceTintColor: Colors.transparent),
-    dialogTheme: DialogThemeData(backgroundColor: C.card, surfaceTintColor: Colors.transparent),
+    bottomSheetTheme: const BottomSheetThemeData(backgroundColor: C.card, surfaceTintColor: Colors.transparent, showDragHandle: true),
+    dialogTheme: const DialogThemeData(backgroundColor: C.card, surfaceTintColor: Colors.transparent),
+    datePickerTheme: const DatePickerThemeData(backgroundColor: C.card, surfaceTintColor: Colors.transparent),
+    timePickerTheme: const TimePickerThemeData(backgroundColor: C.card),
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: C.isLight ? C.ink : C.card,
-      contentTextStyle: GoogleFonts.plusJakartaSans(color: C.isLight ? Colors.white : C.ink, fontWeight: FontWeight.w600, fontSize: 14),
+      backgroundColor: C.navy,
+      contentTextStyle: const TextStyle(fontFamily: _inter, color: C.white, fontWeight: FontWeight.w600, fontSize: 14),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(R.sm)),
     ),

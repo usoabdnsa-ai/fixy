@@ -1,95 +1,101 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
-import '../../widgets/kit.dart';
-
-import 'package:provider/provider.dart';
-
-import '../../data/mock.dart';
 import '../../data/models.dart';
-import '../../main.dart';
+import '../../data/seed.dart';
+import '../../services/provider_service.dart';
 import '../../state/app_state.dart';
-import '../admin/admin_shell.dart';
-import '../client/chat.dart';
+import '../auth/account_type.dart';
+import '../auth/auth_screen.dart';
+import '../client/categories.dart';
 import '../client/client_shell.dart';
-import '../client/craftsman_profile.dart';
-import '../client/job_detail.dart';
-import '../client/post_request.dart';
-import '../client/rate.dart';
-import '../craftsman/pro_shell.dart';
-import 'auth.dart';
-import 'track.dart';
-import '../craftsman/pro_signup.dart';
-import '../craftsman/earnings.dart';
+import '../client/filters.dart';
+import '../client/provider_profile.dart';
+import '../client/request_confirmation.dart';
+import '../client/request_form.dart';
+import '../client/results.dart';
+import '../client/review_form.dart';
+import '../provider/provider_form.dart';
+import '../provider/provider_shell.dart';
+import '../shared/provider_reviews.dart';
+import '../shared/request_detail.dart';
+import 'onboarding.dart';
+import 'router.dart';
 
-/// Web demo shortcut: `?go=<screen>` jumps straight to a screen after the
-/// splash, e.g. `?go=profile` or `?go=pro`. Used for presenting and for
-/// screenshot checks. Returns false when there is no link.
-bool openDeepLink(BuildContext context) {
+/// Web-only shortcuts for screenshots and demos: `?go=<screen>`.
+/// Client screens sign in the demo client, provider screens the demo plombier.
+/// Does nothing on Android.
+Future<bool> openDemoLink(BuildContext context, AppState s) async {
+  if (!kIsWeb) return false;
   final go = Uri.base.queryParameters['go'];
   if (go == null) return false;
-  final s = context.read<AppState>();
   final nav = Navigator.of(context);
-
-  void root(Role role, Widget shell, [Widget? on]) {
-    s.signIn(role, '0555123456');
-    nav.pushAndRemoveUntil(fadeRoute(shell), (_) => false);
-    if (on != null) nav.push(wipeRoute(on));
+  void replace(Widget w) => nav.pushAndRemoveUntil(fadeRoute(w), (_) => false);
+  void over(Widget base, Widget top) {
+    replace(base);
+    nav.push(MaterialPageRoute(builder: (_) => top));
   }
 
-  Job job(JobStatus st) => s.clientJobs.firstWhere((j) => j.status == st);
+  const providerScreens = {'dashboard', 'manage', 'edit', 'proreviews', 'prosettings', 'prodetail'};
+  if (go == 'onboarding') {
+    replace(const OnboardingScreen());
+    return true;
+  }
+  if (go == 'auth') {
+    await s.logout();
+    replace(const AuthScreen());
+    return true;
+  }
+  await s.finishOnboarding();
+  await s.login(providerScreens.contains(go) ? demoProviderPhone : demoClientPhone, demoPassword);
 
   switch (go) {
-    case 'auth':
-      nav.pushReplacement(fadeRoute(const AuthScreen()));
-    case 'client':
-      root(Role.client, const ClientShell());
-    case 'explore':
-      root(Role.client, const ClientShell(tab: 1));
-    case 'jobs':
-      root(Role.client, const ClientShell(tab: 2));
-    case 'account':
-      root(Role.client, const ClientShell(tab: 3));
+    case 'type':
+      replace(const AccountTypeScreen());
+    case 'register':
+      replace(const ProviderFormScreen.register());
+    case 'home':
+      replace(const ClientShell());
+    case 'categories':
+      over(const ClientShell(), const CategoriesScreen());
+    case 'results':
+      over(const ClientShell(), const ResultsScreen(initial: ProviderQuery(category: Category.plombier, wilaya: 'Alger')));
+    case 'filters':
+      over(const ClientShell(), const FiltersScreen(initial: ProviderQuery(category: Category.plombier, wilaya: 'Alger', minRating: 4.5)));
     case 'profile':
-      root(Role.client, const ClientShell(), CraftsmanProfileScreen(craftsman: byId('c1')));
-    case 'post':
-      root(Role.client, const ClientShell(), const PostRequestScreen());
-    case 'quotes':
-      root(Role.client, const ClientShell(tab: 2), JobDetailScreen(job: job(JobStatus.quoted)));
-    case 'tracking':
-      root(Role.client, const ClientShell(tab: 2), JobDetailScreen(job: job(JobStatus.accepted)));
-    case 'live':
-      root(Role.client, const ClientShell(), TrackScreen(job: job(JobStatus.accepted)));
-    case 'navigate':
-      s.signIn(Role.craftsman, '0555123456');
-      nav.pushAndRemoveUntil(fadeRoute(const ProShell(tab: 2)), (_) => false);
-      final pj = s.proJobs.firstWhere((j) => j.status == JobStatus.accepted);
-      s.startNavigation(pj);
-      nav.push(wipeRoute(TrackScreen(job: pj, asPro: true)));
-    case 'signup':
-      s.signIn(Role.craftsman, '0555123456');
-      nav.pushAndRemoveUntil(fadeRoute(const ProSignupScreen()), (_) => false);
-    case 'wallet':
-      root(Role.craftsman, const ProShell(), const EarningsScreen());
-    case 'chat':
-      root(Role.client, const ClientShell(), ChatScreen(job: job(JobStatus.accepted)));
-    case 'rate':
-      root(Role.client, const ClientShell(tab: 2), RateScreen(job: job(JobStatus.completed)));
-    case 'pro':
-      root(Role.craftsman, const ProShell());
-    case 'board':
-      root(Role.craftsman, const ProShell(tab: 1));
-    case 'projobs':
-      root(Role.craftsman, const ProShell(tab: 2));
-    case 'proprofile':
-      root(Role.craftsman, const ProShell(tab: 3));
-    case 'admin':
-      root(Role.admin, const AdminShell());
-    case 'verify':
-      root(Role.admin, const AdminShell(tab: 1));
-    case 'flags':
-      root(Role.admin, const AdminShell(tab: 2));
-    case 'team':
-      root(Role.admin, const AdminShell(tab: 3));
+      over(const ClientShell(), const ProviderProfileScreen(providerId: 'p01'));
+    case 'request':
+      over(const ClientShell(), RequestFormScreen(provider: s.providers.byId('p01')!));
+    case 'confirm':
+      over(const ClientShell(), const RequestConfirmationScreen(requestId: 'r_demo2'));
+    case 'requests':
+      replace(const ClientShell(initial: 1));
+    case 'favorites':
+      if (s.favoriteProviders.isEmpty) {
+        await s.toggleFavorite('p01');
+        await s.toggleFavorite('p03');
+      }
+      replace(const ClientShell(initial: 2));
+    case 'review':
+      over(const ClientShell(initial: 1), const ReviewFormScreen(requestId: 'r_demo1'));
+    case 'detail':
+      over(const ClientShell(initial: 1), const RequestDetailScreen(requestId: 'r_demo2'));
+    case 'settings':
+      replace(const ClientShell(initial: 3));
+    case 'reviews':
+      over(const ClientShell(), const ProviderReviewsScreen(providerId: 'p01'));
+    case 'dashboard':
+      replace(const ProviderShell());
+    case 'manage':
+      replace(const ProviderShell(initial: 1));
+    case 'proreviews':
+      replace(const ProviderShell(initial: 2));
+    case 'prosettings':
+      replace(const ProviderShell(initial: 3));
+    case 'edit':
+      over(const ProviderShell(), const ProviderFormScreen.edit());
+    case 'prodetail':
+      over(const ProviderShell(initial: 1), const RequestDetailScreen(requestId: 'r_demo3'));
     default:
       return false;
   }

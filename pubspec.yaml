@@ -1,5 +1,5 @@
 name: fixy
-description: "A new Flutter project."
+description: "Fixy: vos artisans de confiance en Algérie (MVP)."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -36,10 +36,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.1.5+1
   flutter_animate: ^4.5.2
-  google_fonts: 8.1.0
   phosphor_flutter: ^2.1.0
-  flutter_map: ^8.3.2
-  latlong2: ^0.10.1
+  url_launcher: ^6.3.1
+  image_picker: ^1.1.2
+  shared_preferences: ^2.3.3
+  crypto: ^3.0.6
   animations: ^3.0.0
 
 dev_dependencies:
@@ -60,7 +61,24 @@ dev_dependencies:
 flutter:
   assets:
     - assets/photos/
-    - assets/google_fonts/
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800
+    - family: InterDisplay
+      fonts:
+        - asset: assets/fonts/InterDisplay-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/InterDisplay-ExtraBold.ttf
+          weight: 800
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
